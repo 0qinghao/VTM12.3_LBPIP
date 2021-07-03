@@ -46,90 +46,89 @@ using namespace std;
 
 static const uint8_t emulation_prevention_three_byte = 3;
 
-void writeNalUnitHeader(ostream &out, OutputNALUnit &nalu)   // nal_unit_header()
+void writeNalUnitHeader(ostream& out, OutputNALUnit& nalu)       // nal_unit_header()
 {
-    OutputBitstream bsNALUHeader;
-    int             forbiddenZero = 0;
-    bsNALUHeader.write(forbiddenZero, 1);   // forbidden_zero_bit
-    int nuhReservedZeroBit = 0;
-    bsNALUHeader.write(nuhReservedZeroBit, 1);   // nuh_reserved_zero_bit
-    CHECK(nalu.m_nuhLayerId > 55, "The value of nuh_layer_id shall be in the range of 0 to 55, inclusive");
-    bsNALUHeader.write(nalu.m_nuhLayerId, 6);       // nuh_layer_id
-    bsNALUHeader.write(nalu.m_nalUnitType, 5);      // nal_unit_type
-    bsNALUHeader.write(nalu.m_temporalId + 1, 3);   // nuh_temporal_id_plus1
+  OutputBitstream bsNALUHeader;
+  int forbiddenZero = 0;
+  bsNALUHeader.write(forbiddenZero, 1);   // forbidden_zero_bit
+  int nuhReservedZeroBit = 0;
+  bsNALUHeader.write(nuhReservedZeroBit, 1);   // nuh_reserved_zero_bit
+  CHECK(nalu.m_nuhLayerId > 55, "The value of nuh_layer_id shall be in the range of 0 to 55, inclusive");
+  bsNALUHeader.write(nalu.m_nuhLayerId, 6);       // nuh_layer_id
+  bsNALUHeader.write(nalu.m_nalUnitType, 5);      // nal_unit_type
+  bsNALUHeader.write(nalu.m_temporalId + 1, 3);   // nuh_temporal_id_plus1
 
-    out.write(reinterpret_cast<const char *>(bsNALUHeader.getByteStream()), bsNALUHeader.getByteStreamLength());
+  out.write(reinterpret_cast<const char*>(bsNALUHeader.getByteStream()), bsNALUHeader.getByteStreamLength());
 }
 
 /**
  * write nalu to bytestream out, performing RBSP anti startcode
  * emulation as required.  nalu.m_RBSPayload must be byte aligned.
  */
-void writeNaluContent(ostream &out, OutputNALUnit &nalu)
+void writeNaluContent(ostream& out, OutputNALUnit& nalu)
 {
-    /* write out rsbp_byte's, inserting any required
-     * emulation_prevention_three_byte's */
-    /* 7.4.1 ...
-     * emulation_prevention_three_byte is a byte equal to 0x03. When an
-     * emulation_prevention_three_byte is present in the NAL unit, it shall be
-     * discarded by the decoding process.
-     * The last byte of the NAL unit shall not be equal to 0x00.
-     * Within the NAL unit, the following three-byte sequences shall not occur at
-     * any byte-aligned position:
-     *  - 0x000000
-     *  - 0x000001
-     *  - 0x000002
-     * Within the NAL unit, any four-byte sequence that starts with 0x000003
-     * other than the following sequences shall not occur at any byte-aligned
-     * position:
-     *  - 0x00000300
-     *  - 0x00000301
-     *  - 0x00000302
-     *  - 0x00000303
-     */
-    vector<uint8_t> &rbsp = nalu.m_Bitstream.getFIFO();
+  /* write out rsbp_byte's, inserting any required
+   * emulation_prevention_three_byte's */
+  /* 7.4.1 ...
+   * emulation_prevention_three_byte is a byte equal to 0x03. When an
+   * emulation_prevention_three_byte is present in the NAL unit, it shall be
+   * discarded by the decoding process.
+   * The last byte of the NAL unit shall not be equal to 0x00.
+   * Within the NAL unit, the following three-byte sequences shall not occur at
+   * any byte-aligned position:
+   *  - 0x000000
+   *  - 0x000001
+   *  - 0x000002
+   * Within the NAL unit, any four-byte sequence that starts with 0x000003
+   * other than the following sequences shall not occur at any byte-aligned
+   * position:
+   *  - 0x00000300
+   *  - 0x00000301
+   *  - 0x00000302
+   *  - 0x00000303
+   */
+  vector<uint8_t>& rbsp   = nalu.m_Bitstream.getFIFO();
 
-    vector<uint8_t> outputBuffer;
-    outputBuffer.resize(rbsp.size() * 2
-                        + 1);   // there can never be enough emulation_prevention_three_bytes to require this much space
-    std::size_t outputAmount = 0;
-    int         zeroCount    = 0;
-    for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end(); it++)
+  vector<uint8_t> outputBuffer;
+  outputBuffer.resize(rbsp.size()*2+1); //there can never be enough emulation_prevention_three_bytes to require this much space
+  std::size_t outputAmount = 0;
+  int         zeroCount    = 0;
+  for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end(); it++)
+  {
+    const uint8_t v=(*it);
+    if (zeroCount==2 && v<=3)
     {
-        const uint8_t v = (*it);
-        if (zeroCount == 2 && v <= 3)
-        {
-            outputBuffer[outputAmount++] = emulation_prevention_three_byte;
-            zeroCount                    = 0;
-        }
-
-        if (v == 0)
-        {
-            zeroCount++;
-        }
-        else
-        {
-            zeroCount = 0;
-        }
-        outputBuffer[outputAmount++] = v;
+      outputBuffer[outputAmount++]=emulation_prevention_three_byte;
+      zeroCount=0;
     }
 
-    /* 7.4.1.1
-     * ... when the last byte of the RBSP data is equal to 0x00 (which can
-     * only occur when the RBSP ends in a cabac_zero_word), a final byte equal
-     * to 0x03 is appended to the end of the data.
-     */
-    if (zeroCount > 0)
+    if (v==0)
     {
-        outputBuffer[outputAmount++] = emulation_prevention_three_byte;
+      zeroCount++;
     }
-    out.write(reinterpret_cast<const char *>(&(*outputBuffer.begin())), outputAmount);
+    else
+    {
+      zeroCount=0;
+    }
+    outputBuffer[outputAmount++]=v;
+  }
+
+  /* 7.4.1.1
+   * ... when the last byte of the RBSP data is equal to 0x00 (which can
+   * only occur when the RBSP ends in a cabac_zero_word), a final byte equal
+   * to 0x03 is appended to the end of the data.
+   */
+  if (zeroCount>0)
+  {
+    outputBuffer[outputAmount++]=emulation_prevention_three_byte;
+  }
+  out.write(reinterpret_cast<const char*>(&(*outputBuffer.begin())), outputAmount);
 }
 
-void writeNaluWithHeader(ostream &out, OutputNALUnit &nalu)
+void writeNaluWithHeader(ostream& out, OutputNALUnit& nalu)
 {
-    writeNalUnitHeader(out, nalu);
-    writeNaluContent(out, nalu);
+  writeNalUnitHeader(out, nalu);
+  writeNaluContent(out, nalu);
 }
 
 //! \}

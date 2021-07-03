@@ -31,14 +31,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     Hash.h
-    \brief    Hash class (header)
-*/
+ /** \file     Hash.h
+     \brief    Hash class (header)
+ */
+
 
 #ifndef __HASH__
 #define __HASH__
 
-// Include files
+ // Include files
 
 #include "CommonLib/Buffer.h"
 #include "CommonLib/CommonDef.h"
@@ -47,11 +48,12 @@
 #include "CommonLib/UnitPartitioner.h"
 #include <vector>
 
+
 struct BlockHash
 {
-    short    x;
-    short    y;
-    uint32_t hashValue2;
+  short x;
+  short y;
+  uint32_t hashValue2;
 };
 
 typedef std::vector<BlockHash>::iterator MapIterator;
@@ -60,79 +62,75 @@ typedef std::vector<BlockHash>::iterator MapIterator;
 // Class definitions
 // ====================================================================================================================
 
+
 struct TCRCCalculatorLight
 {
-  public:
-    TCRCCalculatorLight(uint32_t bits, uint32_t truncPoly);
-    ~TCRCCalculatorLight();
+public:
+  TCRCCalculatorLight(uint32_t bits, uint32_t truncPoly);
+  ~TCRCCalculatorLight();
 
-  public:
-    void     processData(unsigned char *curData, uint32_t dataLength);
-    void     reset() { m_remainder = 0; }
-    uint32_t getCRC() { return m_remainder & m_finalResultMask; }
+public:
+  void processData(unsigned char* curData, uint32_t dataLength);
+  void reset() { m_remainder = 0; }
+  uint32_t getCRC() { return m_remainder & m_finalResultMask; }
 
-  private:
-    void xInitTable();
+private:
+  void xInitTable();
 
-  private:
-    uint32_t m_remainder;
-    uint32_t m_truncPoly;
-    uint32_t m_bits;
-    uint32_t m_table[256];
-    uint32_t m_finalResultMask;
+private:
+  uint32_t m_remainder;
+  uint32_t m_truncPoly;
+  uint32_t m_bits;
+  uint32_t m_table[256];
+  uint32_t m_finalResultMask;
 };
+
 
 struct TComHash
 {
-  public:
-    TComHash();
-    ~TComHash();
-    void              create(int picWidth, int picHeight);
-    void              clearAll();
-    void              addToTable(uint32_t hashValue, const BlockHash &blockHash);
-    int               count(uint32_t hashValue);
-    int               count(uint32_t hashValue) const;
-    MapIterator       getFirstIterator(uint32_t hashValue);
-    const MapIterator getFirstIterator(uint32_t hashValue) const;
-    bool              hasExactMatch(uint32_t hashValue1, uint32_t hashValue2);
+public:
+  TComHash();
+  ~TComHash();
+  void create(int picWidth, int picHeight);
+  void clearAll();
+  void addToTable(uint32_t hashValue, const BlockHash& blockHash);
+  int count(uint32_t hashValue);
+  int count(uint32_t hashValue) const;
+  MapIterator getFirstIterator(uint32_t hashValue);
+  const MapIterator getFirstIterator(uint32_t hashValue) const;
+  bool hasExactMatch(uint32_t hashValue1, uint32_t hashValue2);
 
-    void generateBlock2x2HashValue(const PelUnitBuf &curPicBuf, int picWidth, int picHeight, const BitDepths bitDepths,
-                                   uint32_t *picBlockHash[2], bool *picBlockSameInfo[3]);
-    void generateBlockHashValue(int picWidth, int picHeight, int width, int height, uint32_t *srcPicBlockHash[2],
-                                uint32_t *dstPicBlockHash[2], bool *srcPicBlockSameInfo[3],
-                                bool *dstPicBlockSameInfo[3]);
-    void addToHashMapByRowWithPrecalData(uint32_t *srcHash[2], bool *srcIsSame, int picWidth, int picHeight, int width,
-                                         int height);
-    bool isInitial() { return tableHasContent; }
-    void setInitial() { tableHasContent = true; }
-    uint16_t *getHashPic(int baseSize) const { return hashPic[floorLog2(baseSize) - 2]; }
+  void generateBlock2x2HashValue(const PelUnitBuf &curPicBuf, int picWidth, int picHeight, const BitDepths bitDepths, uint32_t* picBlockHash[2], bool* picBlockSameInfo[3]);
+  void generateBlockHashValue(int picWidth, int picHeight, int width, int height, uint32_t* srcPicBlockHash[2], uint32_t* dstPicBlockHash[2], bool* srcPicBlockSameInfo[3], bool* dstPicBlockSameInfo[3]);
+  void addToHashMapByRowWithPrecalData(uint32_t* srcHash[2], bool* srcIsSame, int picWidth, int picHeight, int width, int height);
+  bool isInitial() { return tableHasContent; }
+  void setInitial() { tableHasContent = true; }
+  uint16_t* getHashPic(int baseSize) const { return hashPic[floorLog2(baseSize) - 2]; }
 
-  public:
-    static uint32_t getCRCValue1(unsigned char *p, int length);
-    static uint32_t getCRCValue2(unsigned char *p, int length);
-    static void     getPixelsIn1DCharArrayByBlock2x2(const PelUnitBuf &curPicBuf, unsigned char *pixelsIn1D, int xStart,
-                                                     int yStart, const BitDepths &bitDepths,
-                                                     bool includeAllComponent = true);
-    static bool     isBlock2x2RowSameValue(unsigned char *p, bool includeAllComponent = true);
-    static bool     isBlock2x2ColSameValue(unsigned char *p, bool includeAllComponent = true);
-    static bool     getBlockHashValue(const PelUnitBuf &curPicBuf, int width, int height, int xStart, int yStart,
-                                      const BitDepths bitDepths, uint32_t &hashValue1, uint32_t &hashValue2);
-    static void     initBlockSizeToIndex();
-    static bool     isHorizontalPerfectLuma(const Pel *srcPel, int stride, int width, int height);
-    static bool     isVerticalPerfectLuma(const Pel *srcPel, int stride, int width, int height);
 
-  private:
-    std::vector<BlockHash> **m_lookupTable;
-    bool                     tableHasContent;
-    uint16_t *               hashPic[5];   // 4x4 ~ 64x64
+public:
+  static uint32_t getCRCValue1(unsigned char* p, int length);
+  static uint32_t getCRCValue2(unsigned char* p, int length);
+  static void getPixelsIn1DCharArrayByBlock2x2(const PelUnitBuf &curPicBuf, unsigned char* pixelsIn1D, int xStart, int yStart, const BitDepths& bitDepths, bool includeAllComponent = true);
+  static bool isBlock2x2RowSameValue(unsigned char* p, bool includeAllComponent = true);
+  static bool isBlock2x2ColSameValue(unsigned char* p, bool includeAllComponent = true);
+  static bool getBlockHashValue(const PelUnitBuf &curPicBuf, int width, int height, int xStart, int yStart, const BitDepths bitDepths, uint32_t& hashValue1, uint32_t& hashValue2);
+  static void initBlockSizeToIndex();
+  static bool isHorizontalPerfectLuma(const Pel* srcPel, int stride, int width, int height);
+  static bool isVerticalPerfectLuma(const Pel* srcPel, int stride, int width, int height);
 
-  private:
-    static const int m_CRCBits       = 16;
-    static const int m_blockSizeBits = 3;
-    static int       m_blockSizeToIndex[65][65];
+private:
+  std::vector<BlockHash>** m_lookupTable;
+  bool tableHasContent;
+  uint16_t* hashPic[5];//4x4 ~ 64x64
 
-    static TCRCCalculatorLight m_crcCalculator1;
-    static TCRCCalculatorLight m_crcCalculator2;
+private:
+  static const int m_CRCBits = 16;
+  static const int m_blockSizeBits = 3;
+  static int m_blockSizeToIndex[65][65];
+
+  static TCRCCalculatorLight m_crcCalculator1;
+  static TCRCCalculatorLight m_crcCalculator2;
 };
 
-#endif   // __HASH__
+#endif // __HASH__

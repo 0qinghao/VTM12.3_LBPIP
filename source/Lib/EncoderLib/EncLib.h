@@ -70,176 +70,177 @@ class EncLibCommon;
 /// encoder class
 class EncLib : public EncCfg
 {
-  private:
-    // picture
-    int      m_iPOCLast;           ///< time index (POC)
-    int      m_iNumPicRcvd;        ///< number of received pictures
-    uint32_t m_uiNumAllPicCoded;   ///< number of coded pictures
-    PicList &m_cListPic;           ///< dynamic list of pictures
-    int      m_layerId;
+private:
+  // picture
+  int                       m_iPOCLast;                           ///< time index (POC)
+  int                       m_iNumPicRcvd;                        ///< number of received pictures
+  uint32_t                  m_uiNumAllPicCoded;                   ///< number of coded pictures
+  PicList&                  m_cListPic;                           ///< dynamic list of pictures
+  int                       m_layerId;
 
-    // encoder search
-    InterSearch m_cInterSearch;   ///< encoder search class
-    IntraSearch m_cIntraSearch;   ///< encoder search class
-    // coding tool
-    TrQuant                 m_cTrQuant;      ///< transform & quantization class
-    LoopFilter              m_cLoopFilter;   ///< deblocking filter class
-    EncSampleAdaptiveOffset m_cEncSAO;       ///< sample adaptive offset class
-    EncAdaptiveLoopFilter   m_cEncALF;
-    HLSWriter               m_HLSWriter;   ///< CAVLC encoder
-    CABACEncoder            m_CABACEncoder;
+  // encoder search
+  InterSearch               m_cInterSearch;                       ///< encoder search class
+  IntraSearch               m_cIntraSearch;                       ///< encoder search class
+  // coding tool
+  TrQuant                   m_cTrQuant;                           ///< transform & quantization class
+  LoopFilter                m_cLoopFilter;                        ///< deblocking filter class
+  EncSampleAdaptiveOffset   m_cEncSAO;                            ///< sample adaptive offset class
+  EncAdaptiveLoopFilter     m_cEncALF;
+  HLSWriter                 m_HLSWriter;                          ///< CAVLC encoder
+  CABACEncoder              m_CABACEncoder;
 
-    EncReshape m_cReshaper;   ///< reshaper class
+  EncReshape                m_cReshaper;                        ///< reshaper class
 
-    // processing unit
-    EncGOP   m_cGOPEncoder;     ///< GOP encoder
-    EncSlice m_cSliceEncoder;   ///< slice encoder
-    EncCu    m_cCuEncoder;      ///< CU encoder
-    // SPS
-    ParameterSetMap<SPS> &m_spsMap;      ///< SPS. This is the base value. This is copied to PicSym
-    ParameterSetMap<PPS> &m_ppsMap;      ///< PPS. This is the base value. This is copied to PicSym
-    ParameterSetMap<APS> &m_apsMap;      ///< APS. This is the base value. This is copied to PicSym
-    PicHeader             m_picHeader;   ///< picture header
-    // RD cost computation
-    RdCost   m_cRdCost;    ///< RD cost computation class
-    CtxCache m_CtxCache;   ///< buffer for temporarily stored context models
-    // quality control
-    RateCtrl m_cRateCtrl;   ///< Rate control class
+  // processing unit
+  EncGOP                    m_cGOPEncoder;                        ///< GOP encoder
+  EncSlice                  m_cSliceEncoder;                      ///< slice encoder
+  EncCu                     m_cCuEncoder;                         ///< CU encoder
+  // SPS
+  ParameterSetMap<SPS>&     m_spsMap;                             ///< SPS. This is the base value. This is copied to PicSym
+  ParameterSetMap<PPS>&     m_ppsMap;                             ///< PPS. This is the base value. This is copied to PicSym
+  ParameterSetMap<APS>&     m_apsMap;                             ///< APS. This is the base value. This is copied to PicSym
+  PicHeader                 m_picHeader;                          ///< picture header
+  // RD cost computation
+  RdCost                    m_cRdCost;                            ///< RD cost computation class
+  CtxCache                  m_CtxCache;                           ///< buffer for temporarily stored context models
+  // quality control
+  RateCtrl                  m_cRateCtrl;                          ///< Rate control class
 
-    AUWriterIf *m_AUWriterIf;
+  AUWriterIf*               m_AUWriterIf;
 
 #if JVET_J0090_MEMORY_BANDWITH_MEASURE
-    CacheModel m_cacheModel;
+  CacheModel                m_cacheModel;
 #endif
 
-    APS *m_apss[ALF_CTB_MAX_NUM_APS];
+  APS*                      m_apss[ALF_CTB_MAX_NUM_APS];
 
-    APS *m_lmcsAPS;
-    APS *m_scalinglistAPS;
+  APS*                      m_lmcsAPS;
+  APS*                      m_scalinglistAPS;
 
-    EncHRD m_encHRD;
+  EncHRD                    m_encHRD;
 
-    bool m_doPlt;
+  bool                      m_doPlt;
 #if JVET_O0756_CALCULATE_HDRMETRICS
-    std::chrono::duration<long long, ratio<1, 1000000000>> m_metricTime;
+  std::chrono::duration<long long, ratio<1, 1000000000>> m_metricTime;
 #endif
-    int m_picIdInGOP;
+  int                       m_picIdInGOP;
 
-    VPS *m_vps;
+  VPS*                      m_vps;
 
-    int *m_layerDecPicBuffering;
+  int*                      m_layerDecPicBuffering;
 
-  public:
-    SPS *  getSPS(int spsId) { return m_spsMap.getPS(spsId); };
-    APS ** getApss() { return m_apss; }
-    Ctx    m_entropyCodingSyncContextState;   ///< leave in addition to vector for compatibility
-    PLTBuf m_palettePredictorSyncState;
+public:
+  SPS*                      getSPS( int spsId ) { return m_spsMap.getPS( spsId ); };
+  APS**                     getApss() { return m_apss; }
+  Ctx                       m_entropyCodingSyncContextState;      ///< leave in addition to vector for compatibility
+  PLTBuf                    m_palettePredictorSyncState;
 
-  protected:
-    void xGetNewPicBuffer(std::list<PelUnitBuf *> &rcListPicYuvRecOut, Picture *&rpcPic,
-                          int ppsId);   ///< get picture buffer which will be processed. If ppsId<0, then the ppsMap
-                                        ///< will be queried for the first match.
-    void xInitOPI(OPI &opi);            ///< initialize Operating point Information (OPI) from encoder options
-    void xInitDCI(DCI &      dci,
-                  const SPS &sps);   ///< initialize Decoding Capability Information (DCI) from encoder options
-    void xInitVPS(const SPS &sps);   ///< initialize VPS from encoder options
-    void xInitSPS(SPS &sps);         ///< initialize SPS from encoder options
-    void xInitPPS(PPS &pps, const SPS &sps);   ///< initialize PPS from encoder options
-    void xInitPicHeader(PicHeader &picHeader, const SPS &sps,
-                        const PPS &pps);          ///< initialize Picture Header from encoder options
-    void xInitAPS(APS &aps);                      ///< initialize APS from encoder options
-    void xInitScalingLists(SPS &sps, APS &aps);   ///< initialize scaling lists
-    void xInitPPSforLT(PPS &pps);
-    void xInitHrdParameters(SPS &sps);   ///< initialize HRDParameters parameters
+protected:
+  void  xGetNewPicBuffer  ( std::list<PelUnitBuf*>& rcListPicYuvRecOut, Picture*& rpcPic, int ppsId ); ///< get picture buffer which will be processed. If ppsId<0, then the ppsMap will be queried for the first match.
+  void  xInitOPI(OPI& opi); ///< initialize Operating point Information (OPI) from encoder options
+  void  xInitDCI(DCI& dci, const SPS& sps); ///< initialize Decoding Capability Information (DCI) from encoder options
+  void  xInitVPS( const SPS& sps ); ///< initialize VPS from encoder options
+  void  xInitSPS( SPS& sps );       ///< initialize SPS from encoder options
+  void  xInitPPS          (PPS &pps, const SPS &sps); ///< initialize PPS from encoder options
+  void  xInitPicHeader    (PicHeader &picHeader, const SPS &sps, const PPS &pps); ///< initialize Picture Header from encoder options
+  void  xInitAPS          (APS &aps);                 ///< initialize APS from encoder options
+  void  xInitScalingLists ( SPS &sps, APS &aps );     ///< initialize scaling lists
+  void  xInitPPSforLT(PPS& pps);
+  void  xInitHrdParameters(SPS &sps);                 ///< initialize HRDParameters parameters
 
-    void xInitRPL(SPS &sps);   ///< initialize SPS from encoder options
+  void xInitRPL(SPS &sps);   ///< initialize SPS from encoder options
 
-  public:
-    EncLib(EncLibCommon *encLibCommon);
-    virtual ~EncLib();
+public:
+  EncLib( EncLibCommon* encLibCommon );
+  virtual ~EncLib();
 
-    void create(const int layerId);
-    void destroy();
-    void init(AUWriterIf *auWriterIf);
-    void deletePicBuffer();
+  void      create          ( const int layerId );
+  void      destroy         ();
+  void      init(AUWriterIf *auWriterIf);
+  void      deletePicBuffer ();
 
-    // -------------------------------------------------------------------------------------------------------------------
-    // member access functions
-    // -------------------------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
+  // member access functions
+  // -------------------------------------------------------------------------------------------------------------------
 
-    AUWriterIf * getAUWriterIf() { return m_AUWriterIf; }
-    PicList *    getListPic() { return &m_cListPic; }
-    InterSearch *getInterSearch() { return &m_cInterSearch; }
-    IntraSearch *getIntraSearch() { return &m_cIntraSearch; }
+  AUWriterIf*             getAUWriterIf         ()              { return   m_AUWriterIf;           }
+  PicList*                getListPic            ()              { return  &m_cListPic;             }
+  InterSearch*            getInterSearch        ()              { return  &m_cInterSearch;         }
+  IntraSearch*            getIntraSearch        ()              { return  &m_cIntraSearch;         }
 
-    TrQuant *                getTrQuant() { return &m_cTrQuant; }
-    LoopFilter *             getLoopFilter() { return &m_cLoopFilter; }
-    EncSampleAdaptiveOffset *getSAO() { return &m_cEncSAO; }
-    EncAdaptiveLoopFilter *  getALF() { return &m_cEncALF; }
-    EncGOP *                 getGOPEncoder() { return &m_cGOPEncoder; }
-    EncSlice *               getSliceEncoder() { return &m_cSliceEncoder; }
-    EncHRD *                 getHRD() { return &m_encHRD; }
-    EncCu *                  getCuEncoder() { return &m_cCuEncoder; }
-    HLSWriter *              getHLSWriter() { return &m_HLSWriter; }
-    CABACEncoder *           getCABACEncoder() { return &m_CABACEncoder; }
+  TrQuant*                getTrQuant            ()              { return  &m_cTrQuant;             }
+  LoopFilter*             getLoopFilter         ()              { return  &m_cLoopFilter;          }
+  EncSampleAdaptiveOffset* getSAO               ()              { return  &m_cEncSAO;              }
+  EncAdaptiveLoopFilter*  getALF                ()              { return  &m_cEncALF;              }
+  EncGOP*                 getGOPEncoder         ()              { return  &m_cGOPEncoder;          }
+  EncSlice*               getSliceEncoder       ()              { return  &m_cSliceEncoder;        }
+  EncHRD*                 getHRD                ()              { return  &m_encHRD;               }
+  EncCu*                  getCuEncoder          ()              { return  &m_cCuEncoder;           }
+  HLSWriter*              getHLSWriter          ()              { return  &m_HLSWriter;            }
+  CABACEncoder*           getCABACEncoder       ()              { return  &m_CABACEncoder;         }
 
-    RdCost *  getRdCost() { return &m_cRdCost; }
-    CtxCache *getCtxCache() { return &m_CtxCache; }
-    RateCtrl *getRateCtrl() { return &m_cRateCtrl; }
+  RdCost*                 getRdCost             ()              { return  &m_cRdCost;              }
+  CtxCache*               getCtxCache           ()              { return  &m_CtxCache;             }
+  RateCtrl*               getRateCtrl           ()              { return  &m_cRateCtrl;            }
 
-    void getActiveRefPicListNumForPOC(const SPS *sps, int POCCurr, int GOPid, uint32_t *activeL0, uint32_t *activeL1);
-    void selectReferencePictureList(Slice *slice, int POCCurr, int GOPid, int ltPoc);
 
-    void       setParamSetChanged(int spsId, int ppsId);
-    bool       APSNeedsWriting(int apsId);
-    bool       PPSNeedsWriting(int ppsId);
-    bool       SPSNeedsWriting(int spsId);
-    const PPS *getPPS(int Id) { return m_ppsMap.getPS(Id); }
-    const APS *getAPS(int Id) { return m_apsMap.getPS(Id); }
+  void                    getActiveRefPicListNumForPOC(const SPS *sps, int POCCurr, int GOPid, uint32_t *activeL0, uint32_t *activeL1);
+  void                    selectReferencePictureList(Slice* slice, int POCCurr, int GOPid, int ltPoc);
 
-    EncReshape *getReshaper() { return &m_cReshaper; }
+  void                   setParamSetChanged(int spsId, int ppsId);
+  bool                   APSNeedsWriting(int apsId);
+  bool                   PPSNeedsWriting(int ppsId);
+  bool                   SPSNeedsWriting(int spsId);
+  const PPS* getPPS( int Id ) { return m_ppsMap.getPS( Id); }
+  const APS*             getAPS(int Id) { return m_apsMap.getPS(Id); }
 
-    ParameterSetMap<APS> *getApsMap() { return &m_apsMap; }
+  EncReshape*            getReshaper()                          { return  &m_cReshaper; }
 
-    bool getPltEnc() const { return m_doPlt; }
-    void checkPltStats(Picture *pic);
+  ParameterSetMap<APS>*  getApsMap() { return &m_apsMap; }
+
+  bool                   getPltEnc()                      const { return   m_doPlt; }
+  void                   checkPltStats( Picture* pic );
 #if JVET_O0756_CALCULATE_HDRMETRICS
-    std::chrono::duration<long long, ratio<1, 1000000000>> getMetricTime() const { return m_metricTime; };
+  std::chrono::duration<long long, ratio<1, 1000000000>> getMetricTime()    const { return m_metricTime; };
 #endif
-    // -------------------------------------------------------------------------------------------------------------------
-    // encoder function
-    // -------------------------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------------
+  // encoder function
+  // -------------------------------------------------------------------------------------------------------------------
 
-    /// encode several number of pictures until end-of-sequence
-    bool encodePrep(
-      bool bEos, PelStorage *pcPicYuvOrg, PelStorage *pcPicYuvTrueOrg, PelStorage *pcPicYuvFilteredOrg,
-      const InputColourSpaceConversion snrCSC,   // used for SNR calculations. Picture in original colour space.
-      std::list<PelUnitBuf *> &rcListPicYuvRecOut, int &iNumEncoded);
+  /// encode several number of pictures until end-of-sequence
+  bool encodePrep( bool bEos,
+               PelStorage* pcPicYuvOrg,
+               PelStorage* pcPicYuvTrueOrg,
+               PelStorage* pcPicYuvFilteredOrg,
+               const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+               std::list<PelUnitBuf*>& rcListPicYuvRecOut,
+               int& iNumEncoded );
 
-    bool
-      encode(const InputColourSpaceConversion snrCSC,   // used for SNR calculations. Picture in original colour space.
-             std::list<PelUnitBuf *> &rcListPicYuvRecOut, int &iNumEncoded);
+  bool encode( const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+               std::list<PelUnitBuf*>& rcListPicYuvRecOut,
+               int& iNumEncoded );
 
-    bool encodePrep(
-      bool bEos, PelStorage *pcPicYuvOrg, PelStorage *pcPicYuvTrueOrg, PelStorage *pcPicYuvFilteredOrg,
-      const InputColourSpaceConversion snrCSC,   // used for SNR calculations. Picture in original colour space.
-      std::list<PelUnitBuf *> &rcListPicYuvRecOut, int &iNumEncoded, bool isTff);
+  bool encodePrep( bool bEos,
+               PelStorage* pcPicYuvOrg,
+               PelStorage* pcPicYuvTrueOrg,
+               PelStorage* pcPicYuvFilteredOrg,
+               const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+               std::list<PelUnitBuf*>& rcListPicYuvRecOut,
+               int& iNumEncoded, bool isTff );
 
-    bool
-      encode(const InputColourSpaceConversion snrCSC,   // used for SNR calculations. Picture in original colour space.
-             std::list<PelUnitBuf *> &rcListPicYuvRecOut, int &iNumEncoded, bool isTff);
+  bool encode( const InputColourSpaceConversion snrCSC, // used for SNR calculations. Picture in original colour space.
+               std::list<PelUnitBuf*>& rcListPicYuvRecOut,
+               int& iNumEncoded, bool isTff );
 
-    void printSummary(bool isField)
-    {
-        m_cGOPEncoder.printOutSummary(m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, m_printSequenceMSE,
-                                      m_printMSSSIM, m_printHexPsnr, m_resChangeInClvsEnabled,
-                                      m_spsMap.getFirstPS()->getBitDepths());
-    }
 
-    int  getLayerId() const { return m_layerId; }
-    VPS *getVPS() { return m_vps; }
+  void printSummary(bool isField) { m_cGOPEncoder.printOutSummary(m_uiNumAllPicCoded, isField, m_printMSEBasedSequencePSNR, 
+    m_printSequenceMSE, m_printMSSSIM, m_printHexPsnr, m_resChangeInClvsEnabled, m_spsMap.getFirstPS()->getBitDepths()); }
+
+  int getLayerId() const { return m_layerId; }
+  VPS* getVPS()          { return m_vps;     }
 };
 
 //! \}
 
-#endif   // __ENCTOP__
+#endif // __ENCTOP__
+

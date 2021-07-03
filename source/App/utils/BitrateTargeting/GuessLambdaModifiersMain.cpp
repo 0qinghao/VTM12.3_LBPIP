@@ -31,44 +31,45 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include "RuntimeError.h"
 #include "GuessLambdaModifiers.h"
 #include <iostream>
 
-class WrongNumberOfArgumentsException : public RuntimeError
+class WrongNumberOfArgumentsException: public RuntimeError
 {
   public:
-    virtual ~WrongNumberOfArgumentsException() throw() {}
-
+    virtual ~WrongNumberOfArgumentsException( ) throw( ) { }
   protected:
-    void outputWhat(std::ostream &o) const { o << "Wrong number of arguments"; }
+    void outputWhat( std::ostream& o ) const { o << "Wrong number of arguments"; }
 };
 
-int main(int argc, char **ppArgv)
+int main( int argc, char** ppArgv )
 {
-    try
+  try
+  {
+    if( argc != 3 )
     {
-        if (argc != 3)
-        {
-            throw WrongNumberOfArgumentsException();
-        }
-
-        std::string        initialAdjustmentParameterString(ppArgv[1]);
-        std::istringstream initialAdjustmentParameterIstream(initialAdjustmentParameterString);
-
-        std::string        targetBitratesString(ppArgv[2]);
-        std::istringstream targetBitratesIstream(targetBitratesString);
-
-        guessLambdaModifiers(std::cout, initialAdjustmentParameterIstream, targetBitratesIstream, std::cin);
-        return 0;
+      throw WrongNumberOfArgumentsException( );
     }
-    catch (std::exception &e)
-    {
-        std::cerr << e.what() << std::endl;
-    }
-    catch (...)
-    {
-        std::cerr << "Unknown exception" << std::endl;
-    }
-    return 1;
+
+    std::string initialAdjustmentParameterString( ppArgv[ 1 ] );
+    std::istringstream initialAdjustmentParameterIstream( initialAdjustmentParameterString );
+
+    std::string targetBitratesString( ppArgv[ 2 ] );
+    std::istringstream targetBitratesIstream( targetBitratesString );
+
+    guessLambdaModifiers( std::cout, initialAdjustmentParameterIstream, targetBitratesIstream, std::cin );
+    return 0;
+
+  }
+  catch( std::exception& e )
+  {
+    std::cerr << e.what( ) << std::endl;
+  }
+  catch( ... )
+  {
+    std::cerr << "Unknown exception" << std::endl;
+  }
+  return 1;
 }

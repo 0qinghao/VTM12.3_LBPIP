@@ -37,91 +37,100 @@
 #include "Utilities/program_options_lite.h"
 #include "CommonLib/Unit.h"
 
+
 using namespace std;
 namespace po = df::program_options_lite;
 
-Int main(Int argc, const char **argv)
+Int main(Int argc, const char** argv)
 {
-    Bool   do_help;
-    string filename_in, filename_out;
-    UInt   width, height;
-    UInt   bitdepth_in, bitdepth_out, chromaFormatRaw;
-    UInt   num_frames;
-    UInt   num_frames_skip;
+  Bool do_help;
+  string filename_in, filename_out;
+  UInt width, height;
+  UInt bitdepth_in, bitdepth_out, chromaFormatRaw;
+  UInt num_frames;
+  UInt num_frames_skip;
 
-    po::Options opts;
-    opts.addOptions()("help", do_help, false, "this help text")("InputFile,i", filename_in, string(""),
-                                                                "input file to convert")(
-      "OutputFile,o", filename_out, string(""), "output file")("SourceWidth", width, 0u, "source picture width")(
-      "SourceHeight", height, 0u, "source picture height")("InputBitDepth", bitdepth_in, 8u, "bit-depth of input file")(
-      "OutputBitDepth", bitdepth_out, 8u, "bit-depth of output file")("ChromaFormat", chromaFormatRaw, 420u,
-                                                                      "chroma format. 400, 420, 422 or 444 only")(
-      "NumFrames", num_frames, 0xffffffffu, "number of frames to process")(
-      "FrameSkip,-fs", num_frames_skip, 0u, "Number of frames to skip at start of input YUV");
+  po::Options opts;
+  opts.addOptions()
+  ("help", do_help, false, "this help text")
+  ("InputFile,i", filename_in, string(""), "input file to convert")
+  ("OutputFile,o", filename_out, string(""), "output file")
+  ("SourceWidth", width, 0u, "source picture width")
+  ("SourceHeight", height, 0u, "source picture height")
+  ("InputBitDepth", bitdepth_in, 8u, "bit-depth of input file")
+  ("OutputBitDepth", bitdepth_out, 8u, "bit-depth of output file")
+  ("ChromaFormat", chromaFormatRaw, 420u, "chroma format. 400, 420, 422 or 444 only")
+  ("NumFrames", num_frames, 0xffffffffu, "number of frames to process")
+  ("FrameSkip,-fs", num_frames_skip, 0u, "Number of frames to skip at start of input YUV")
+  ;
 
-    po::setDefaults(opts);
-    po::scanArgv(opts, argc, argv);
+  po::setDefaults(opts);
+  po::scanArgv(opts, argc, argv);
 
-    if (argc == 1 || do_help)
+
+  if (argc == 1 || do_help)
+  {
+    /* argc == 1: no options have been specified */
+    po::doHelp(cout, opts);
+    return EXIT_FAILURE;
+  }
+
+  ChromaFormat chromaFormatIDC=CHROMA_420;
+  switch (chromaFormatRaw)
+  {
+    case 400: chromaFormatIDC=CHROMA_400; break;
+    case 420: chromaFormatIDC=CHROMA_420; break;
+    case 422: chromaFormatIDC=CHROMA_422; break;
+    case 444: chromaFormatIDC=CHROMA_444; break;
+    default:
+      fprintf(stderr, "Bad chroma format string\n");
+      return EXIT_FAILURE;
+  }
+
+  VideoIOYuv input;
+  VideoIOYuv output;
+
+  Int inputBitDepths [MAX_NUM_CHANNEL_TYPE];
+  Int outputBitDepths[MAX_NUM_CHANNEL_TYPE];
+
+  for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
+  {
+    inputBitDepths [channelTypeIndex] = bitdepth_in;
+    outputBitDepths[channelTypeIndex] = bitdepth_out;
+  }
+
+  input.open((char*)filename_in.c_str(), false, inputBitDepths, inputBitDepths, outputBitDepths);
+  output.open((char*)filename_out.c_str(), true, outputBitDepths, outputBitDepths, outputBitDepths);
+
+  input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
+
+  PelStorage frame;
+  frame.create( chromaFormatIDC, Area( 0, 0, width, height));
+
+  Int pad[2] = {0, 0};
+
+  PelStorage cPicYuvTrueOrg;
+  cPicYuvTrueOrg.create( chromaFormatIDC, Area( 0, 0, width, height));
+
+
+  UInt num_frames_processed = 0;
+  while (!input.isEof())
+  {
+    if (! input.read( frame, cPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, pad))
     {
-        /* argc == 1: no options have been specified */
-        po::doHelp(cout, opts);
-        return EXIT_FAILURE;
+      break;
     }
 
-    ChromaFormat chromaFormatIDC = CHROMA_420;
-    switch (chromaFormatRaw)
+    output.write( frame, IPCOLOURSPACE_UNCHANGED);
+    num_frames_processed++;
+    if (num_frames_processed == num_frames)
     {
-    case 400: chromaFormatIDC = CHROMA_400; break;
-    case 420: chromaFormatIDC = CHROMA_420; break;
-    case 422: chromaFormatIDC = CHROMA_422; break;
-    case 444: chromaFormatIDC = CHROMA_444; break;
-    default: fprintf(stderr, "Bad chroma format string\n"); return EXIT_FAILURE;
+      break;
     }
+  }
 
-    VideoIOYuv input;
-    VideoIOYuv output;
+  input.close();
+  output.close();
 
-    Int inputBitDepths[MAX_NUM_CHANNEL_TYPE];
-    Int outputBitDepths[MAX_NUM_CHANNEL_TYPE];
-
-    for (UInt channelTypeIndex = 0; channelTypeIndex < MAX_NUM_CHANNEL_TYPE; channelTypeIndex++)
-    {
-        inputBitDepths[channelTypeIndex]  = bitdepth_in;
-        outputBitDepths[channelTypeIndex] = bitdepth_out;
-    }
-
-    input.open((char *) filename_in.c_str(), false, inputBitDepths, inputBitDepths, outputBitDepths);
-    output.open((char *) filename_out.c_str(), true, outputBitDepths, outputBitDepths, outputBitDepths);
-
-    input.skipFrames(num_frames_skip, width, height, chromaFormatIDC);
-
-    PelStorage frame;
-    frame.create(chromaFormatIDC, Area(0, 0, width, height));
-
-    Int pad[2] = { 0, 0 };
-
-    PelStorage cPicYuvTrueOrg;
-    cPicYuvTrueOrg.create(chromaFormatIDC, Area(0, 0, width, height));
-
-    UInt num_frames_processed = 0;
-    while (!input.isEof())
-    {
-        if (!input.read(frame, cPicYuvTrueOrg, IPCOLOURSPACE_UNCHANGED, pad))
-        {
-            break;
-        }
-
-        output.write(frame, IPCOLOURSPACE_UNCHANGED);
-        num_frames_processed++;
-        if (num_frames_processed == num_frames)
-        {
-            break;
-        }
-    }
-
-    input.close();
-    output.close();
-
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }

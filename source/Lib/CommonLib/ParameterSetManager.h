@@ -39,267 +39,249 @@
 #include "Slice.h"
 #include <map>
 
-void calculateParameterSetChangedFlag(bool &bChanged, const std::vector<uint8_t> *pOldData,
-                                      const std::vector<uint8_t> *pNewData);
+void calculateParameterSetChangedFlag(bool &bChanged, const std::vector<uint8_t> *pOldData, const std::vector<uint8_t> *pNewData);
 
-template<class T> class ParameterSetMap
+template <class T> class ParameterSetMap
 {
-  public:
-    template<class Tm> struct MapData
-    {
-        bool                  bChanged;
-        std::vector<uint8_t> *pNaluData;   // Can be null
-        Tm *                  parameterSet;
-    };
+public:
+  template <class Tm>
+  struct MapData
+  {
+    bool                  bChanged;
+    std::vector<uint8_t>   *pNaluData; // Can be null
+    Tm*                   parameterSet;
+  };
 
-    ParameterSetMap(int maxId) : m_maxId(maxId), m_lastActiveParameterSet(NULL) { m_activePsId.clear(); }
+  ParameterSetMap(int maxId)
+  :m_maxId (maxId)
+  ,m_lastActiveParameterSet(NULL)
+  {
+    m_activePsId.clear();
+  }
 
-    ~ParameterSetMap()
+  ~ParameterSetMap()
+  {
+    for (typename std::map<int,MapData<T> >::iterator i = m_paramsetMap.begin(); i!= m_paramsetMap.end(); i++)
     {
-        for (typename std::map<int, MapData<T>>::iterator i = m_paramsetMap.begin(); i != m_paramsetMap.end(); i++)
-        {
-            delete (*i).second.pNaluData;
-            delete (*i).second.parameterSet;
-        }
-        delete m_lastActiveParameterSet;
-        m_lastActiveParameterSet = NULL;
+      delete (*i).second.pNaluData;
+      delete (*i).second.parameterSet;
     }
+    delete m_lastActiveParameterSet; m_lastActiveParameterSet = NULL;
+  }
 
-    T *allocatePS(const int psId)
+  T *allocatePS(const int psId)
+  {
+    CHECK( psId >= m_maxId, "Invalid PS id" );
+    if ( m_paramsetMap.find(psId) == m_paramsetMap.end() )
     {
-        CHECK(psId >= m_maxId, "Invalid PS id");
-        if (m_paramsetMap.find(psId) == m_paramsetMap.end())
-        {
-            m_paramsetMap[psId].bChanged     = true;
-            m_paramsetMap[psId].pNaluData    = 0;
-            m_paramsetMap[psId].parameterSet = new T;
-            setID(m_paramsetMap[psId].parameterSet, psId);
-        }
-        return m_paramsetMap[psId].parameterSet;
+      m_paramsetMap[psId].bChanged = true;
+      m_paramsetMap[psId].pNaluData=0;
+      m_paramsetMap[psId].parameterSet = new T;
+      setID(m_paramsetMap[psId].parameterSet, psId);
     }
+    return m_paramsetMap[psId].parameterSet;
+  }
 
-    void clearMap() { m_paramsetMap.clear(); }
-    void storePS(int psId, T *ps)
+  void clearMap()
+  {
+    m_paramsetMap.clear();
+  }
+  void storePS( int psId, T *ps )
+  {
+    CHECK( psId >= m_maxId, "Invalid PS id" );
+    if( m_paramsetMap.find( psId ) != m_paramsetMap.end() )
     {
-        CHECK(psId >= m_maxId, "Invalid PS id");
-        if (m_paramsetMap.find(psId) != m_paramsetMap.end())
-        {
-            delete m_paramsetMap[psId].parameterSet;
-        }
-        m_paramsetMap[psId].parameterSet = ps;
-        m_paramsetMap[psId].bChanged     = true;
+      delete m_paramsetMap[psId].parameterSet;
     }
-    void storePS(int psId, T *ps, const std::vector<uint8_t> *pNaluData)
+    m_paramsetMap[psId].parameterSet = ps;
+    m_paramsetMap[psId].bChanged = true;
+  }
+  void storePS(int psId, T *ps, const std::vector<uint8_t> *pNaluData)
+  {
+    CHECK( psId >= m_maxId, "Invalid PS id" );
+    if ( m_paramsetMap.find(psId) != m_paramsetMap.end() )
     {
-        CHECK(psId >= m_maxId, "Invalid PS id");
-        if (m_paramsetMap.find(psId) != m_paramsetMap.end())
-        {
-            MapData<T> &mapData = m_paramsetMap[psId];
+      MapData<T> &mapData=m_paramsetMap[psId];
 
-            // work out changed flag
-            calculateParameterSetChangedFlag(mapData.bChanged, mapData.pNaluData, pNaluData);
+      // work out changed flag
+      calculateParameterSetChangedFlag(mapData.bChanged, mapData.pNaluData, pNaluData);
 
-            if (!mapData.bChanged)
-            {
-                // just keep the old one
-                delete ps;
-                return;
-            }
+      if( ! mapData.bChanged )
+      {
+        // just keep the old one
+        delete ps;
+        return;
+      }
 
-            if (find(m_activePsId.begin(), m_activePsId.end(), psId) != m_activePsId.end())
-            {
-                std::swap(m_paramsetMap[psId].parameterSet, m_lastActiveParameterSet);
-            }
-            delete m_paramsetMap[psId].pNaluData;
-            delete m_paramsetMap[psId].parameterSet;
+      if (find(m_activePsId.begin(), m_activePsId.end(), psId) != m_activePsId.end())
+      {
+        std::swap( m_paramsetMap[psId].parameterSet, m_lastActiveParameterSet );
+      }
+      delete m_paramsetMap[psId].pNaluData;
+      delete m_paramsetMap[psId].parameterSet;
 
-            m_paramsetMap[psId].parameterSet = ps;
-        }
-        else
-        {
-            m_paramsetMap[psId].parameterSet = ps;
-            m_paramsetMap[psId].bChanged     = false;
-        }
-        if (pNaluData != 0)
-        {
-            m_paramsetMap[psId].pNaluData    = new std::vector<uint8_t>;
-            *(m_paramsetMap[psId].pNaluData) = *pNaluData;
-        }
-        else
-        {
-            m_paramsetMap[psId].pNaluData = 0;
-        }
+      m_paramsetMap[psId].parameterSet = ps;
     }
-
-    void checkAuApsContent(APS *aps, std::vector<int> &accessUnitApsNals)
+    else
     {
-        int apsId = (aps->getAPSId() << NUM_APS_TYPE_LEN) + aps->getAPSType();
-
-        if (std::find(accessUnitApsNals.begin(), accessUnitApsNals.end(), apsId) != accessUnitApsNals.end())
-        {
-            CHECK(m_paramsetMap.find(apsId) == m_paramsetMap.end(), "APS does not exist");
-            APS *existedAPS      = m_paramsetMap[apsId].parameterSet;
-            bool sameNalUnitType = aps->getHasPrefixNalUnitType() == existedAPS->getHasPrefixNalUnitType();
-            bool samePU          = aps->getLayerId() == existedAPS->getLayerId();
-            if (aps->getAPSType() == LMCS_APS)
-            {
-                CHECK(samePU && sameNalUnitType && aps->getReshaperAPSInfo() != existedAPS->getReshaperAPSInfo(),
-                      "All APS NAL units with a particular value of nal_unit_type, a particular value of "
-                      "aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall "
-                      "have the same content");
-            }
-            else if (aps->getAPSType() == ALF_APS)
-            {
-                CHECK(samePU && sameNalUnitType && aps->getAlfAPSParam() != existedAPS->getAlfAPSParam(),
-                      "All APS NAL units with a particular value of nal_unit_type, a particular value of "
-                      "aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall "
-                      "have the same content");
-            }
-            else if (aps->getAPSType() == SCALING_LIST_APS)
-            {
-                CHECK(samePU && sameNalUnitType && aps->getScalingList() != existedAPS->getScalingList(),
-                      "All APS NAL units with a particular value of nal_unit_type, a particular value of "
-                      "aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall "
-                      "have the same content");
-            }
-            else
-            {
-                THROW("Wrong APS type");
-            }
-        }
-        else
-        {
-            accessUnitApsNals.push_back(apsId);
-        }
+      m_paramsetMap[psId].parameterSet = ps;
+      m_paramsetMap[psId].bChanged = false;
     }
-
-    void setChangedFlag(int psId, bool bChanged = true)
+    if (pNaluData != 0)
     {
-        if (m_paramsetMap.find(psId) != m_paramsetMap.end())
-        {
-            m_paramsetMap[psId].bChanged = bChanged;
-        }
+      m_paramsetMap[psId].pNaluData=new std::vector<uint8_t>;
+      *(m_paramsetMap[psId].pNaluData) = *pNaluData;
     }
-
-    void clearChangedFlag(int psId)
+    else
     {
-        if (m_paramsetMap.find(psId) != m_paramsetMap.end())
-        {
-            m_paramsetMap[psId].bChanged = false;
-        }
+      m_paramsetMap[psId].pNaluData=0;
     }
+  }
 
-    bool getChangedFlag(int psId) const
+  void checkAuApsContent( APS *aps, std::vector<int>& accessUnitApsNals )
+  {
+    int apsId = ( aps->getAPSId() << NUM_APS_TYPE_LEN ) + aps->getAPSType();
+
+    if( std::find( accessUnitApsNals.begin(), accessUnitApsNals.end(), apsId ) != accessUnitApsNals.end() )
     {
-        const typename std::map<int, MapData<T>>::const_iterator constit = m_paramsetMap.find(psId);
-        if (constit != m_paramsetMap.end())
-        {
-            return constit->second.bChanged;
-        }
-        return false;
+      CHECK( m_paramsetMap.find( apsId ) == m_paramsetMap.end(), "APS does not exist" );
+      APS* existedAPS = m_paramsetMap[apsId].parameterSet;
+      bool sameNalUnitType = aps->getHasPrefixNalUnitType() == existedAPS->getHasPrefixNalUnitType();
+      bool samePU = aps->getLayerId() == existedAPS->getLayerId();
+      if( aps->getAPSType() == LMCS_APS )
+      {
+        CHECK( samePU && sameNalUnitType && aps->getReshaperAPSInfo() != existedAPS->getReshaperAPSInfo(), "All APS NAL units with a particular value of nal_unit_type, a particular value of aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall have the same content" );
+      }
+      else if( aps->getAPSType() == ALF_APS )
+      {
+        CHECK( samePU && sameNalUnitType && aps->getAlfAPSParam() != existedAPS->getAlfAPSParam(), "All APS NAL units with a particular value of nal_unit_type, a particular value of aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall have the same content" );
+      }
+      else if( aps->getAPSType() == SCALING_LIST_APS )
+      {
+        CHECK( samePU && sameNalUnitType && aps->getScalingList() != existedAPS->getScalingList(), "All APS NAL units with a particular value of nal_unit_type, a particular value of aps_adaptation_parameter_set_id, and a particular value of aps_params_type within a PU shall have the same content" );
+      }
+      else
+      {
+        THROW("Wrong APS type");
+      }
     }
-
-    T *getPS(int psId)
+    else
     {
-        typename std::map<int, MapData<T>>::iterator it = m_paramsetMap.find(psId);
-        return (it == m_paramsetMap.end()) ? NULL : (it)->second.parameterSet;
+      accessUnitApsNals.push_back( apsId );
     }
+  }
 
-    const T *getPS(int psId) const
+
+  void setChangedFlag(int psId, bool bChanged=true)
+  {
+    if ( m_paramsetMap.find(psId) != m_paramsetMap.end() )
     {
-        typename std::map<int, MapData<T>>::const_iterator it = m_paramsetMap.find(psId);
-        return (it == m_paramsetMap.end()) ? NULL : (it)->second.parameterSet;
+      m_paramsetMap[psId].bChanged=bChanged;
     }
+  }
 
-    T *getFirstPS()
+  void clearChangedFlag(int psId)
+  {
+    if ( m_paramsetMap.find(psId) != m_paramsetMap.end() )
     {
-        return (m_paramsetMap.begin() == m_paramsetMap.end()) ? NULL : m_paramsetMap.begin()->second.parameterSet;
+      m_paramsetMap[psId].bChanged=false;
     }
+  }
 
-    void setActive(int psId) { m_activePsId.push_back(psId); }
-    void clearActive() { m_activePsId.clear(); }
+  bool getChangedFlag(int psId) const
+  {
+    const typename std::map<int,MapData<T> >::const_iterator constit=m_paramsetMap.find(psId);
+    if ( constit != m_paramsetMap.end() )
+    {
+      return constit->second.bChanged;
+    }
+    return false;
+  }
 
-  private:
-    std::map<int, MapData<T>> m_paramsetMap;
-    int                       m_maxId;
-    std::vector<int>          m_activePsId;
-    T *                       m_lastActiveParameterSet;
-    static void               setID(T *parameterSet, const int psId);
+  T* getPS(int psId)
+  {
+    typename std::map<int,MapData<T> >::iterator it=m_paramsetMap.find(psId);
+    return ( it == m_paramsetMap.end() ) ? NULL : (it)->second.parameterSet;
+  }
+
+  const T* getPS(int psId) const
+  {
+    typename std::map<int,MapData<T> >::const_iterator it=m_paramsetMap.find(psId);
+    return ( it == m_paramsetMap.end() ) ? NULL : (it)->second.parameterSet;
+  }
+
+  T* getFirstPS()
+  {
+    return (m_paramsetMap.begin() == m_paramsetMap.end() ) ? NULL : m_paramsetMap.begin()->second.parameterSet;
+  }
+
+  void setActive(int psId) { m_activePsId.push_back(psId); }
+  void clearActive() { m_activePsId.clear(); }
+
+private:
+  std::map<int,MapData<T> > m_paramsetMap;
+  int                       m_maxId;
+  std::vector<int>          m_activePsId;
+  T*                        m_lastActiveParameterSet;
+  static void setID(T* parameterSet, const int psId);
 };
 
 class ParameterSetManager
 {
-  public:
-    ParameterSetManager();
-    virtual ~ParameterSetManager();
+public:
+                 ParameterSetManager();
+  virtual        ~ParameterSetManager();
 
-    // store video parameter set and take ownership of it
-    // warning: vps object cannot be used after storing (repeated parameter sets are directly deleted)
-    void storeVPS(VPS *vps, const std::vector<uint8_t> &naluData) { m_vpsMap.storePS(vps->getVPSId(), vps, &naluData); }
-    VPS *getVPS(int vpsId);
+  // store video parameter set and take ownership of it
+  // warning: vps object cannot be used after storing (repeated parameter sets are directly deleted)
+  void           storeVPS(VPS *vps, const std::vector<uint8_t> &naluData)    { m_vpsMap.storePS(vps->getVPSId(), vps, &naluData); }
+  VPS*           getVPS( int vpsId );
 
-    // store sequence parameter set and take ownership of it
-    // warning: sps object cannot be used after storing (repeated parameter sets are directly deleted)
-    void storeSPS(SPS *sps, const std::vector<uint8_t> &naluData)
-    {
-        m_spsMap.storePS(sps->getSPSId(), sps, &naluData);
-    };
-    // get pointer to existing sequence parameter set
-    SPS *getSPS(int spsId) { return m_spsMap.getPS(spsId); };
-    bool getSPSChangedFlag(int spsId) const { return m_spsMap.getChangedFlag(spsId); }
-    void clearSPSChangedFlag(int spsId) { m_spsMap.clearChangedFlag(spsId); }
-    SPS *getFirstSPS() { return m_spsMap.getFirstPS(); };
+  // store sequence parameter set and take ownership of it
+  // warning: sps object cannot be used after storing (repeated parameter sets are directly deleted)
+  void           storeSPS(SPS *sps, const std::vector<uint8_t> &naluData)    { m_spsMap.storePS( sps->getSPSId(), sps, &naluData); };
+  // get pointer to existing sequence parameter set
+  SPS*           getSPS(int spsId)                                           { return m_spsMap.getPS(spsId); };
+  bool           getSPSChangedFlag(int spsId) const                          { return m_spsMap.getChangedFlag(spsId); }
+  void           clearSPSChangedFlag(int spsId)                              { m_spsMap.clearChangedFlag(spsId); }
+  SPS*           getFirstSPS()                                               { return m_spsMap.getFirstPS(); };
 
-    // store picture parameter set and take ownership of it
-    // warning: pps object cannot be used after storing (repeated parameter sets are directly deleted)
-    void storePPS(PPS *pps, const std::vector<uint8_t> &naluData)
-    {
-        m_ppsMap.storePS(pps->getPPSId(), pps, &naluData);
-    };
-    // get pointer to existing picture parameter set
-    PPS *getPPS(int ppsId) { return m_ppsMap.getPS(ppsId); };
-    bool getPPSChangedFlag(int ppsId) const { return m_ppsMap.getChangedFlag(ppsId); }
-    void clearPPSChangedFlag(int ppsId) { m_ppsMap.clearChangedFlag(ppsId); }
-    PPS *getFirstPPS() { return m_ppsMap.getFirstPS(); };
+  // store picture parameter set and take ownership of it
+  // warning: pps object cannot be used after storing (repeated parameter sets are directly deleted)
+  void           storePPS(PPS *pps, const std::vector<uint8_t> &naluData)    { m_ppsMap.storePS( pps->getPPSId(), pps, &naluData); };
+  // get pointer to existing picture parameter set
+  PPS*           getPPS(int ppsId)                                           { return m_ppsMap.getPS(ppsId); };
+  bool           getPPSChangedFlag(int ppsId) const                          { return m_ppsMap.getChangedFlag(ppsId); }
+  void           clearPPSChangedFlag(int ppsId)                              { m_ppsMap.clearChangedFlag(ppsId); }
+  PPS*           getFirstPPS()                                               { return m_ppsMap.getFirstPS(); };
 
-    // activate a PPS and depending on isIRAP parameter also SPS
-    // returns true, if activation is successful
-    bool activatePPS(int ppsId, bool isIRAP);
+  // activate a PPS and depending on isIRAP parameter also SPS
+  // returns true, if activation is successful
+  bool           activatePPS(int ppsId, bool isIRAP);
 
-    APS **                getAPSs() { return &m_apss[0]; }
-    ParameterSetMap<APS> *getApsMap() { return &m_apsMap; }
-    // store adaptation parameter set and take ownership of it
-    // warning: aps object cannot be used after storing (repeated parameter sets are directly deleted)
-    void storeAPS(APS *aps, const std::vector<uint8_t> &naluData)
-    {
-        m_apsMap.storePS((aps->getAPSId() << NUM_APS_TYPE_LEN) + aps->getAPSType(), aps, &naluData);
-    };
-    APS *getAPS(int apsId, int apsType) { return m_apsMap.getPS((apsId << NUM_APS_TYPE_LEN) + apsType); };
-    bool getAPSChangedFlag(int apsId, int apsType) const
-    {
-        return m_apsMap.getChangedFlag((apsId << NUM_APS_TYPE_LEN) + apsType);
-    }
-    void clearAPSChangedFlag(int apsId, int apsType)
-    {
-        m_apsMap.clearChangedFlag((apsId << NUM_APS_TYPE_LEN) + apsType);
-    }
-    APS *      getFirstAPS() { return m_apsMap.getFirstPS(); };
-    bool       activateAPS(int apsId, int apsType);
-    const SPS *getActiveSPS() const { return m_spsMap.getPS(m_activeSPSId); };
-    void       checkAuApsContent(APS *aps, std::vector<int> &accessUnitApsNals)
-    {
-        m_apsMap.checkAuApsContent(aps, accessUnitApsNals);
-    }
+  APS**          getAPSs() { return &m_apss[0]; }
+  ParameterSetMap<APS>* getApsMap() { return &m_apsMap; }
+  // store adaptation parameter set and take ownership of it
+  // warning: aps object cannot be used after storing (repeated parameter sets are directly deleted)
+  void           storeAPS(APS *aps, const std::vector<uint8_t> &naluData)    { m_apsMap.storePS( ( aps->getAPSId() << NUM_APS_TYPE_LEN ) + aps->getAPSType(), aps, &naluData); };
+  APS*           getAPS(int apsId, int apsType)                              { return m_apsMap.getPS( ( apsId << NUM_APS_TYPE_LEN ) + apsType ); };
+  bool           getAPSChangedFlag(int apsId, int apsType) const             { return m_apsMap.getChangedFlag( ( apsId << NUM_APS_TYPE_LEN ) + apsType ); }
+  void           clearAPSChangedFlag(int apsId, int apsType)                 { m_apsMap.clearChangedFlag( ( apsId << NUM_APS_TYPE_LEN ) + apsType ); }
+  APS*           getFirstAPS()                                               { return m_apsMap.getFirstPS(); };
+  bool           activateAPS(int apsId, int apsType);
+  const SPS*     getActiveSPS()const                                         { return m_spsMap.getPS(m_activeSPSId); };
+  void           checkAuApsContent( APS *aps, std::vector<int>& accessUnitApsNals ) { m_apsMap.checkAuApsContent( aps, accessUnitApsNals ); }
 
-  protected:
-    ParameterSetMap<SPS> m_spsMap;
-    ParameterSetMap<PPS> m_ppsMap;
-    ParameterSetMap<APS> m_apsMap;
-    ParameterSetMap<VPS> m_vpsMap;
+protected:
+  ParameterSetMap<SPS> m_spsMap;
+  ParameterSetMap<PPS> m_ppsMap;
+  ParameterSetMap<APS> m_apsMap;
+  ParameterSetMap<VPS> m_vpsMap;
 
-    APS *m_apss[ALF_CTB_MAX_NUM_APS];
-    int  m_activeSPSId;   // -1 for nothing active
-    int  m_activeVPSId;   // -1 for nothing active
+  APS* m_apss[ALF_CTB_MAX_NUM_APS];
+  int m_activeSPSId; // -1 for nothing active
+  int m_activeVPSId; // -1 for nothing active
 };
+
 
 #endif

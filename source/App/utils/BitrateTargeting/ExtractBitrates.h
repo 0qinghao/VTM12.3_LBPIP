@@ -38,28 +38,27 @@
 #include <vector>
 
 /// An error occured while parsing a POC line from within a log file
-class POCParseException : public RuntimeError
+class POCParseException: public RuntimeError
 {
   public:
-    POCParseException(const std::string &pocLine) : m_pocLine(pocLine) {}
-    virtual ~POCParseException() throw() {}
+    POCParseException( const std::string& pocLine ): m_pocLine( pocLine ) { }
+    virtual ~POCParseException( ) throw ( ) { }
 
   protected:
-    void outputWhat(std::ostream &o) const { o << "POC parse exception: " << m_pocLine; }
+    void outputWhat( std::ostream& o ) const { o << "POC parse exception: " << m_pocLine; }
 
   private:
     std::string m_pocLine;
 };
 
-/// The QP set from the log file was not contiguous.  The QP set must be contiguous to be able to convert the results
-/// into a vector.
-class NonContiguousQPSetException : public RuntimeError
+/// The QP set from the log file was not contiguous.  The QP set must be contiguous to be able to convert the results into a vector.
+class NonContiguousQPSetException: public RuntimeError
 {
   public:
-    virtual ~NonContiguousQPSetException() throw() {}
+    virtual ~NonContiguousQPSetException( ) throw( ) { }
 
   protected:
-    void outputWhat(std::ostream &o) const { o << "Non-contiguous QP set exception"; }
+    void outputWhat( std::ostream& o ) const { o << "Non-contiguous QP set exception"; }
 };
 
 /// Extracts the average bitrates for each of the temporal layers from the given log
@@ -67,6 +66,6 @@ class NonContiguousQPSetException : public RuntimeError
 /// \return A vector of doubles that contains the average bitrates for each temporal layer
 /// \throw POCParseException if an error occured while parsing a POC line
 /// \throw NonContiguousQPSetException if the QP set from the log file was not contiguous
-std::vector<double> extractBitratesForTemporalLayers(std::istream &i);
+std::vector< double > extractBitratesForTemporalLayers( std::istream& i );
 
 #endif

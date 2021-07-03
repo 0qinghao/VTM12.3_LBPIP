@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CommonLib/CommonDef.h"
 #include "CommonLib/BitStream.h"
@@ -57,26 +57,26 @@
 /// slice decoder class
 class DecSlice
 {
-  private:
-    // access channel
-    CABACDecoder *m_CABACDecoder;
-    DecCu *       m_pcCuDecoder;
+private:
+  // access channel
+  CABACDecoder*   m_CABACDecoder;
+  DecCu*          m_pcCuDecoder;
 
-    Ctx m_entropyCodingSyncContextState;   ///< context storage for state of contexts at the
-                                           ///< wavefront/WPP/entropy-coding-sync second CTU of tile-row
-    PLTBuf m_palettePredictorSyncState;    /// palette predictor storage at wavefront/WPP
+  Ctx             m_entropyCodingSyncContextState;      ///< context storage for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
+  PLTBuf          m_palettePredictorSyncState;      /// palette predictor storage at wavefront/WPP
 
-  public:
-    DecSlice();
-    virtual ~DecSlice();
+public:
+  DecSlice();
+  virtual ~DecSlice();
 
-    void init(CABACDecoder *cabacDecoder, DecCu *pcMbDecoder);
-    void create();
-    void destroy();
+  void  init              ( CABACDecoder* cabacDecoder, DecCu* pcMbDecoder );
+  void  create            ();
+  void  destroy           ();
 
-    void decompressSlice(Slice *slice, InputBitstream *bitstream, int debugCTU);
+  void  decompressSlice   ( Slice* slice, InputBitstream* bitstream, int debugCTU );
 };
 
 //! \}
 
 #endif
+

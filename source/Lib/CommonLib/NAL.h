@@ -47,57 +47,76 @@ class OutputBitstream;
  */
 struct NALUnit
 {
-    NalUnitType m_nalUnitType;   ///< nal_unit_type
-    uint32_t    m_temporalId;    ///< temporal_id
-    uint32_t    m_nuhLayerId;    ///< nuh_layer_id
-    uint32_t    m_forbiddenZeroBit;
-    uint32_t    m_nuhReservedZeroBit;
+  NalUnitType m_nalUnitType; ///< nal_unit_type
+  uint32_t        m_temporalId;  ///< temporal_id
+  uint32_t        m_nuhLayerId;  ///< nuh_layer_id
+  uint32_t        m_forbiddenZeroBit;
+  uint32_t        m_nuhReservedZeroBit;
 
-    NALUnit(const NALUnit &src)
-      : m_nalUnitType(src.m_nalUnitType)
-      , m_temporalId(src.m_temporalId)
-      , m_nuhLayerId(src.m_nuhLayerId)
-      , m_forbiddenZeroBit(src.m_forbiddenZeroBit)
-      , m_nuhReservedZeroBit(src.m_nuhReservedZeroBit)
-    {
-    }
-    /** construct an NALunit structure with given header values. */
-    NALUnit(NalUnitType nalUnitType, int temporalId = 0, uint32_t nuhReservedZeroBit = 0, uint32_t forbiddenZeroBit = 0,
-            int nuhLayerId = 0)
-      : m_nalUnitType(nalUnitType)
-      , m_temporalId(temporalId)
-      , m_nuhLayerId(nuhLayerId)
+  NALUnit(const NALUnit &src)
+  :m_nalUnitType (src.m_nalUnitType)
+  ,m_temporalId  (src.m_temporalId)
+  ,m_nuhLayerId  (src.m_nuhLayerId)
+  , m_forbiddenZeroBit(src.m_forbiddenZeroBit)
+  , m_nuhReservedZeroBit(src.m_nuhReservedZeroBit)
+  { }
+  /** construct an NALunit structure with given header values. */
+  NALUnit(
+    NalUnitType nalUnitType,
+    int         temporalId = 0,
+    uint32_t nuhReservedZeroBit = 0,
+    uint32_t forbiddenZeroBit = 0,
+    int         nuhLayerId = 0)
+    :m_nalUnitType (nalUnitType)
+    ,m_temporalId  (temporalId)
+    ,m_nuhLayerId  (nuhLayerId)
 #if JVET_O0179_PROPOSALB
-      , m_forbiddenZeroBit(forbiddenZeroBit)
-      , m_nuhReservedZeroBit(nuhReservedZeroBit)
+    , m_forbiddenZeroBit(forbiddenZeroBit)
+    , m_nuhReservedZeroBit(nuhReservedZeroBit)
 #endif
 
-    {
-    }
 
-    /** default constructor - no initialization; must be performed by user */
-    NALUnit() {}
+  {}
 
-    virtual ~NALUnit() {}
+  /** default constructor - no initialization; must be performed by user */
+  NALUnit() {}
 
-    /** returns true if the NALunit is a slice NALunit */
-    bool isSlice()
-    {
-        return m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA
-               || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
-               || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA || m_nalUnitType == NAL_UNIT_CODED_SLICE_GDR
-               || m_nalUnitType == NAL_UNIT_CODED_SLICE_RADL || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL;
-    }
-    bool isSei() { return m_nalUnitType == NAL_UNIT_PREFIX_SEI || m_nalUnitType == NAL_UNIT_SUFFIX_SEI; }
+  virtual ~NALUnit() { }
 
-    bool isVcl() { return isVclNalUnitType(m_nalUnitType); }
+  /** returns true if the NALunit is a slice NALunit */
+  bool isSlice()
+  {
+    return m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_GDR
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_RADL
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL;
+  }
+  bool isSei()
+  {
+    return m_nalUnitType == NAL_UNIT_PREFIX_SEI
+        || m_nalUnitType == NAL_UNIT_SUFFIX_SEI;
+  }
 
-    static bool isVclNalUnitType(NalUnitType t)
-    {
-        return t == NAL_UNIT_CODED_SLICE_TRAIL || t == NAL_UNIT_CODED_SLICE_STSA || t == NAL_UNIT_CODED_SLICE_RADL
-               || t == NAL_UNIT_CODED_SLICE_RASL || t == NAL_UNIT_CODED_SLICE_IDR_W_RADL
-               || t == NAL_UNIT_CODED_SLICE_IDR_N_LP || t == NAL_UNIT_CODED_SLICE_CRA || t == NAL_UNIT_CODED_SLICE_GDR;
-    }
+  bool isVcl()
+  {
+    return isVclNalUnitType(m_nalUnitType);
+  }
+
+  static bool isVclNalUnitType(NalUnitType t)
+  {
+    return t == NAL_UNIT_CODED_SLICE_TRAIL
+        || t == NAL_UNIT_CODED_SLICE_STSA
+        || t == NAL_UNIT_CODED_SLICE_RADL
+        || t == NAL_UNIT_CODED_SLICE_RASL
+        || t == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+        || t == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || t == NAL_UNIT_CODED_SLICE_CRA
+        || t == NAL_UNIT_CODED_SLICE_GDR;
+  }
 };
 
 struct OutputNALUnit;
@@ -107,17 +126,18 @@ struct OutputNALUnit;
  */
 struct NALUnitEBSP : public NALUnit
 {
-    std::ostringstream m_nalUnitData;
+  std::ostringstream m_nalUnitData;
 
-    /**
-     * convert the OutputNALUnit nalu into EBSP format by writing out
-     * the NALUnit header, then the rbsp_bytes including any
-     * emulation_prevention_three_byte symbols.
-     */
-    NALUnitEBSP(OutputNALUnit &nalu);
+  /**
+   * convert the OutputNALUnit nalu into EBSP format by writing out
+   * the NALUnit header, then the rbsp_bytes including any
+   * emulation_prevention_three_byte symbols.
+   */
+  NALUnitEBSP(OutputNALUnit& nalu);
 };
 //! \}
 //! \}
+
 
 /**
  * An AccessUnit is a list of one or more NAL units, according to the
@@ -131,17 +151,18 @@ struct NALUnitEBSP : public NALUnit
  * The AccessUnit owns all pointers stored within.  Destroying the
  * AccessUnit will delete all contained objects.
  */
-class AccessUnit : public std::list<NALUnitEBSP *>   // NOTE: Should not inherit from STL.
+class AccessUnit : public std::list<NALUnitEBSP*> // NOTE: Should not inherit from STL.
 {
-  public:
-    int temporalId;
-    ~AccessUnit()
+public:
+  int temporalId;
+  ~AccessUnit()
+  {
+    for (AccessUnit::iterator it = this->begin(); it != this->end(); it++)
     {
-        for (AccessUnit::iterator it = this->begin(); it != this->end(); it++)
-        {
-            delete *it;
-        }
+      delete *it;
     }
+  }
 };
+
 
 #endif

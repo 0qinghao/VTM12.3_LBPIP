@@ -69,242 +69,230 @@ class EncSlice;
 /// CU encoder class
 struct GeoMergeCombo
 {
-    int    splitDir;
-    int    mergeIdx0;
-    int    mergeIdx1;
-    double cost;
-    GeoMergeCombo() : splitDir(), mergeIdx0(-1), mergeIdx1(-1), cost(0.0){};
-    GeoMergeCombo(int _splitDir, int _mergeIdx0, int _mergeIdx1, double _cost)
-      : splitDir(_splitDir), mergeIdx0(_mergeIdx0), mergeIdx1(_mergeIdx1), cost(_cost){};
+  int splitDir;
+  int mergeIdx0;
+  int mergeIdx1;
+  double cost;
+  GeoMergeCombo() : splitDir(), mergeIdx0(-1), mergeIdx1(-1), cost(0.0) {};
+  GeoMergeCombo(int _splitDir, int _mergeIdx0, int _mergeIdx1, double _cost) : splitDir(_splitDir), mergeIdx0(_mergeIdx0), mergeIdx1(_mergeIdx1), cost(_cost) {};
 };
 struct GeoMotionInfo
 {
-    uint8_t m_candIdx0;
-    uint8_t m_candIdx1;
+  uint8_t   m_candIdx0;
+  uint8_t   m_candIdx1;
 
-    GeoMotionInfo(uint8_t candIdx0, uint8_t candIdx1) : m_candIdx0(candIdx0), m_candIdx1(candIdx1) {}
-    GeoMotionInfo() { m_candIdx0 = m_candIdx1 = 0; }
+  GeoMotionInfo(uint8_t candIdx0, uint8_t candIdx1) : m_candIdx0(candIdx0), m_candIdx1(candIdx1) { }
+  GeoMotionInfo() { m_candIdx0 = m_candIdx1 = 0; }
 };
 struct SmallerThanComboCost
 {
-    inline bool operator()(const GeoMergeCombo &first, const GeoMergeCombo &second)
-    {
-        return (first.cost < second.cost);
-    }
+  inline bool operator() (const GeoMergeCombo& first, const GeoMergeCombo& second)
+  {
+    return (first.cost < second.cost);
+  }
 };
 
 class GeoComboCostList
 {
-  public:
-    GeoComboCostList(){};
-    ~GeoComboCostList(){};
-    std::vector<GeoMergeCombo> list;
-
-    void sortByCost() { std::stable_sort(list.begin(), list.end(), SmallerThanComboCost()); };
+public:
+  GeoComboCostList() {};
+  ~GeoComboCostList() {};
+  std::vector<GeoMergeCombo> list;  
+  
+  void sortByCost() { std::stable_sort(list.begin(), list.end(), SmallerThanComboCost()); };
 };
 struct SingleGeoMergeEntry
 {
-    int    mergeIdx;
-    double cost;
-    SingleGeoMergeEntry() : mergeIdx(0), cost(MAX_DOUBLE){};
-    SingleGeoMergeEntry(int _mergeIdx, double _cost) : mergeIdx(_mergeIdx), cost(_cost){};
+  int mergeIdx;
+  double cost;
+  SingleGeoMergeEntry() : mergeIdx(0), cost(MAX_DOUBLE) {};
+  SingleGeoMergeEntry(int _mergeIdx, double _cost) : mergeIdx(_mergeIdx), cost(_cost) {};
 };
 class FastGeoCostList
 {
-  public:
-    FastGeoCostList() { numGeoTemplatesInitialized = 0; };
-    ~FastGeoCostList()
+public:
+  FastGeoCostList() { numGeoTemplatesInitialized = 0; };
+  ~FastGeoCostList()
+  {
+    for (int partIdx = 0; partIdx < 2; partIdx++)
     {
-        for (int partIdx = 0; partIdx < 2; partIdx++)
-        {
-            for (int splitDir = 0; splitDir < GEO_NUM_PARTITION_MODE; splitDir++)
-            {
-                delete[] singleDistList[partIdx][splitDir];
-            }
-            delete[] singleDistList[partIdx];
-            singleDistList[partIdx] = nullptr;
-        }
-    };
-    SingleGeoMergeEntry **singleDistList[2];
-    void                  init(int numTemplates, int maxNumGeoCand)
-    {
-        if (numGeoTemplatesInitialized == 0 || numGeoTemplatesInitialized < numTemplates)
-        {
-            for (int partIdx = 0; partIdx < 2; partIdx++)
-            {
-                singleDistList[partIdx] = new SingleGeoMergeEntry *[numTemplates];
-                for (int splitDir = 0; splitDir < numTemplates; splitDir++)
-                {
-                    singleDistList[partIdx][splitDir] = new SingleGeoMergeEntry[maxNumGeoCand];
-                }
-            }
-            numGeoTemplatesInitialized = numTemplates;
-        }
+      for (int splitDir = 0; splitDir < GEO_NUM_PARTITION_MODE; splitDir++)
+      {
+        delete[] singleDistList[partIdx][splitDir];
+      }
+      delete[] singleDistList[partIdx];
+      singleDistList[partIdx] = nullptr;
     }
-    void insert(int geoIdx, int partIdx, int mergeIdx, double cost)
+  };
+  SingleGeoMergeEntry** singleDistList[2];
+  void init(int numTemplates, int maxNumGeoCand)
+  {
+    if (numGeoTemplatesInitialized == 0 || numGeoTemplatesInitialized < numTemplates)
     {
-        assert(geoIdx < numGeoTemplatesInitialized);
-        singleDistList[partIdx][geoIdx][mergeIdx] = SingleGeoMergeEntry(mergeIdx, cost);
+      for (int partIdx = 0; partIdx < 2; partIdx++)
+      {
+        singleDistList[partIdx] = new SingleGeoMergeEntry*[numTemplates];
+        for (int splitDir = 0; splitDir < numTemplates; splitDir++)
+        {
+          singleDistList[partIdx][splitDir] = new SingleGeoMergeEntry[maxNumGeoCand];
+        }
+      }
+      numGeoTemplatesInitialized = numTemplates;
     }
-    int numGeoTemplatesInitialized;
+  }
+  void insert(int geoIdx, int partIdx, int mergeIdx, double cost)
+  {
+    assert(geoIdx < numGeoTemplatesInitialized);
+    singleDistList[partIdx][geoIdx][mergeIdx] = SingleGeoMergeEntry(mergeIdx, cost);
+  }
+  int numGeoTemplatesInitialized;
 };
 
-class EncCu : DecCu
+class EncCu
+  : DecCu
 {
-  private:
-    bool m_bestModeUpdated;
-    struct CtxPair
-    {
-        Ctx start;
-        Ctx best;
-    };
+private:
+  bool m_bestModeUpdated;
+  struct CtxPair
+  {
+    Ctx start;
+    Ctx best;
+  };
 
-    std::vector<CtxPair> m_CtxBuffer;
-    CtxPair *            m_CurrCtx;
-    CtxCache *           m_CtxCache;
+  std::vector<CtxPair>  m_CtxBuffer;
+  CtxPair*              m_CurrCtx;
+  CtxCache*             m_CtxCache;
 
-    //  Data : encoder control
-    int m_cuChromaQpOffsetIdxPlus1;   // if 0, then cu_chroma_qp_offset_flag will be 0, otherwise
-                                      // cu_chroma_qp_offset_flag will be 1.
+  //  Data : encoder control
+  int                   m_cuChromaQpOffsetIdxPlus1; // if 0, then cu_chroma_qp_offset_flag will be 0, otherwise cu_chroma_qp_offset_flag will be 1.
 
-    XUCache m_unitCache;
+  XUCache               m_unitCache;
 
-    CodingStructure ***m_pTempCS;
-    CodingStructure ***m_pBestCS;
-    CodingStructure ***m_pTempCS2;
-    CodingStructure ***m_pBestCS2;
-    //  Access channel
-    EncCfg *     m_pcEncCfg;
-    IntraSearch *m_pcIntraSearch;
-    InterSearch *m_pcInterSearch;
-    TrQuant *    m_pcTrQuant;
-    RdCost *     m_pcRdCost;
-    EncSlice *   m_pcSliceEncoder;
-    LoopFilter * m_pcLoopFilter;
+  CodingStructure    ***m_pTempCS;
+  CodingStructure    ***m_pBestCS;
+  CodingStructure    ***m_pTempCS2;
+  CodingStructure    ***m_pBestCS2;
+  //  Access channel
+  EncCfg*               m_pcEncCfg;
+  IntraSearch*          m_pcIntraSearch;
+  InterSearch*          m_pcInterSearch;
+  TrQuant*              m_pcTrQuant;
+  RdCost*               m_pcRdCost;
+  EncSlice*             m_pcSliceEncoder;
+  LoopFilter*           m_pcLoopFilter;
 
-    CABACWriter *m_CABACEstimator;
-    RateCtrl *   m_pcRateCtrl;
-    IbcHashMap   m_ibcHashMap;
-    EncModeCtrl *m_modeCtrl;
+  CABACWriter*          m_CABACEstimator;
+  RateCtrl*             m_pcRateCtrl;
+  IbcHashMap            m_ibcHashMap;
+  EncModeCtrl          *m_modeCtrl;
 
-    PelStorage      m_acMergeBuffer[MMVD_MRG_MAX_RD_BUF_NUM];
-    PelStorage      m_acRealMergeBuffer[MRG_MAX_NUM_CANDS];
-    PelStorage      m_acMergeTmpBuffer[MRG_MAX_NUM_CANDS];
-    PelStorage      m_acGeoWeightedBuffer[GEO_MAX_TRY_WEIGHTED_SAD];   // to store weighted prediction pixles
-    FastGeoCostList m_GeoCostList;
-    double          m_AFFBestSATDCost;
-    double          m_mergeBestSATDCost;
-    MotionInfo      m_SubPuMiBuf[(MAX_CU_SIZE * MAX_CU_SIZE) >> (MIN_CU_LOG2 << 1)];
+  PelStorage            m_acMergeBuffer[MMVD_MRG_MAX_RD_BUF_NUM];
+  PelStorage            m_acRealMergeBuffer[MRG_MAX_NUM_CANDS];
+  PelStorage            m_acMergeTmpBuffer[MRG_MAX_NUM_CANDS];
+  PelStorage            m_acGeoWeightedBuffer[GEO_MAX_TRY_WEIGHTED_SAD]; // to store weighted prediction pixles
+  FastGeoCostList       m_GeoCostList;
+  double                m_AFFBestSATDCost;
+  double                m_mergeBestSATDCost;
+  MotionInfo            m_SubPuMiBuf      [( MAX_CU_SIZE * MAX_CU_SIZE ) >> ( MIN_CU_LOG2 << 1 )];
 
-    int           m_ctuIbcSearchRangeX;
-    int           m_ctuIbcSearchRangeY;
-    int           m_bestBcwIdx[2];
-    double        m_bestBcwCost[2];
-    GeoMotionInfo m_GeoModeTest[GEO_MAX_NUM_CANDS];
+  int                   m_ctuIbcSearchRangeX;
+  int                   m_ctuIbcSearchRangeY;
+  int                   m_bestBcwIdx[2];
+  double                m_bestBcwCost[2];
+  GeoMotionInfo         m_GeoModeTest[GEO_MAX_NUM_CANDS];
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU
-    void updateLambda(Slice *slice, const int dQP,
-#if WCG_EXT && ER_CHROMA_QP_WCG_PPS
-                      const bool useWCGChromaControl,
+  void    updateLambda      ( Slice* slice, const int dQP,
+ #if WCG_EXT && ER_CHROMA_QP_WCG_PPS
+                              const bool useWCGChromaControl,
+ #endif
+                              const bool updateRdCostLambda );
 #endif
-                      const bool updateRdCostLambda);
-#endif
-    double m_sbtCostSave[2];
+  double                m_sbtCostSave[2];
+public:
+  /// copy parameters from encoder class
+  void  init                ( EncLib* pcEncLib, const SPS& sps );
 
-  public:
-    /// copy parameters from encoder class
-    void init(EncLib *pcEncLib, const SPS &sps);
+  void setDecCuReshaperInEncCU(EncReshape* pcReshape, ChromaFormat chromaFormatIDC) { initDecCuReshaper((Reshape*) pcReshape, chromaFormatIDC); }
+  /// create internal buffers
+  void  create              ( EncCfg* encCfg );
 
-    void setDecCuReshaperInEncCU(EncReshape *pcReshape, ChromaFormat chromaFormatIDC)
-    {
-        initDecCuReshaper((Reshape *) pcReshape, chromaFormatIDC);
-    }
-    /// create internal buffers
-    void create(EncCfg *encCfg);
+  /// destroy internal buffers
+  void  destroy             ();
 
-    /// destroy internal buffers
-    void destroy();
+  /// CTU analysis function
+  void  compressCtu         ( CodingStructure& cs, const UnitArea& area, const unsigned ctuRsAddr, const int prevQP[], const int currQP[] );
+  /// CTU encoding function
+  int   updateCtuDataISlice ( const CPelBuf buf );
 
-    /// CTU analysis function
-    void compressCtu(CodingStructure &cs, const UnitArea &area, const unsigned ctuRsAddr, const int prevQP[],
-                     const int currQP[]);
-    /// CTU encoding function
-    int updateCtuDataISlice(const CPelBuf buf);
+  EncModeCtrl* getModeCtrl  () { return m_modeCtrl; }
 
-    EncModeCtrl *getModeCtrl() { return m_modeCtrl; }
 
-    void        setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
-    double      getMergeBestSATDCost() { return m_mergeBestSATDCost; }
-    void        setAFFBestSATDCost(double cost) { m_AFFBestSATDCost = cost; }
-    double      getAFFBestSATDCost() { return m_AFFBestSATDCost; }
-    IbcHashMap &getIbcHashMap() { return m_ibcHashMap; }
-    EncCfg *    getEncCfg() const { return m_pcEncCfg; }
+  void   setMergeBestSATDCost(double cost) { m_mergeBestSATDCost = cost; }
+  double getMergeBestSATDCost()            { return m_mergeBestSATDCost; }
+  void   setAFFBestSATDCost(double cost)   { m_AFFBestSATDCost = cost; }
+  double getAFFBestSATDCost()              { return m_AFFBestSATDCost; }
+  IbcHashMap& getIbcHashMap()              { return m_ibcHashMap;        }
+  EncCfg*     getEncCfg()            const { return m_pcEncCfg;          }
 
-    EncCu();
-    ~EncCu();
+  EncCu();
+  ~EncCu();
 
-  protected:
-    void       xCalDebCost(CodingStructure &cs, Partitioner &partitioner, bool calDist = false);
-    Distortion getDistortionDb(CodingStructure &cs, CPelBuf org, CPelBuf reco, ComponentID compID,
-                               const CompArea &compArea, bool afterDb);
+protected:
 
-    void xCompressCU(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                     double maxCostAllowed = MAX_DOUBLE);
+  void xCalDebCost            ( CodingStructure &cs, Partitioner &partitioner, bool calDist = false );
+  Distortion getDistortionDb  ( CodingStructure &cs, CPelBuf org, CPelBuf reco, ComponentID compID, const CompArea& compArea, bool afterDb );
 
-    bool xCheckBestMode(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                        const EncTestMode &encTestmode);
+  void xCompressCU            ( CodingStructure*& tempCS, CodingStructure*& bestCS, Partitioner& pm, double maxCostAllowed = MAX_DOUBLE );
 
-    void xCheckModeSplit(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                         const EncTestMode &encTestMode, const ModeType modeTypeParent, bool &skipInterPass);
+  bool
+    xCheckBestMode         ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestmode );
 
-    bool xCheckRDCostIntra(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                           const EncTestMode &encTestMode, bool adaptiveColorTrans);
+  void xCheckModeSplit        ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode, const ModeType modeTypeParent, bool &skipInterPass );
 
-    void xCheckDQP(CodingStructure &cs, Partitioner &partitioner, bool bKeepCtx = false);
-    void xCheckChromaQPOffset(CodingStructure &cs, Partitioner &partitioner);
+  bool xCheckRDCostIntra(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode, bool adaptiveColorTrans);
 
-    void xCheckRDCostHashInter(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                               const EncTestMode &encTestMode);
-    void xCheckRDCostAffineMerge2Nx2N(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner,
-                                      const EncTestMode &encTestMode);
-    void xCheckRDCostInter(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                           const EncTestMode &encTestMode);
-    bool xCheckRDCostInterIMV(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                              const EncTestMode &encTestMode, double &bestIntPelCost);
-    void xEncodeDontSplit(CodingStructure &cs, Partitioner &partitioner);
+  void xCheckDQP              ( CodingStructure& cs, Partitioner& partitioner, bool bKeepCtx = false);
+  void xCheckChromaQPOffset   ( CodingStructure& cs, Partitioner& partitioner);
 
-    void xCheckRDCostMerge2Nx2N(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                                const EncTestMode &encTestMode);
+  void xCheckRDCostHashInter  ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode );
+  void xCheckRDCostAffineMerge2Nx2N
+                              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
+  void xCheckRDCostInter      ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode );
+  bool xCheckRDCostInterIMV(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode, double &bestIntPelCost);
+  void xEncodeDontSplit       ( CodingStructure &cs, Partitioner &partitioner);
 
-    void xCheckRDCostMergeGeo2Nx2N(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                                   const EncTestMode &encTestMode);
+  void xCheckRDCostMerge2Nx2N ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode );
 
-    void xEncodeInterResidual(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner,
-                              const EncTestMode &encTestMode, int residualPass = 0, bool *bestHasNonResi = NULL,
-                              double *equBcwCost = NULL);
+  void xCheckRDCostMergeGeo2Nx2N(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode);
+
+  void xEncodeInterResidual(   CodingStructure *&tempCS
+                             , CodingStructure *&bestCS
+                             , Partitioner &partitioner
+                             , const EncTestMode& encTestMode
+                             , int residualPass       = 0
+                             , bool* bestHasNonResi   = NULL
+                             , double* equBcwCost     = NULL
+                           );
 #if REUSE_CU_RESULTS
-    void xReuseCachedResult(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &Partitioner);
+  void xReuseCachedResult     ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &Partitioner );
 #endif
-    bool xIsBcwSkip(const CodingUnit &cu)
+  bool xIsBcwSkip(const CodingUnit& cu)
+  {
+    if (cu.slice->getSliceType() != B_SLICE)
     {
-        if (cu.slice->getSliceType() != B_SLICE)
-        {
-            return true;
-        }
-        return ((m_pcEncCfg->getBaseQP() > 32)
-                && ((cu.slice->getTLayer() >= 4)
-                    || ((cu.refIdxBi[0] >= 0 && cu.refIdxBi[1] >= 0)
-                        && (abs(cu.slice->getPOC() - cu.slice->getRefPOC(REF_PIC_LIST_0, cu.refIdxBi[0])) == 1
-                            || abs(cu.slice->getPOC() - cu.slice->getRefPOC(REF_PIC_LIST_1, cu.refIdxBi[1])) == 1))));
+      return true;
     }
-    void xCheckRDCostIBCMode(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm,
-                             const EncTestMode &encTestMode);
-    void xCheckRDCostIBCModeMerge2Nx2N(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner,
-                                       const EncTestMode &encTestMode);
+    return((m_pcEncCfg->getBaseQP() > 32) && ((cu.slice->getTLayer() >= 4)
+       || ((cu.refIdxBi[0] >= 0 && cu.refIdxBi[1] >= 0)
+       && (abs(cu.slice->getPOC() - cu.slice->getRefPOC(REF_PIC_LIST_0, cu.refIdxBi[0])) == 1
+       ||  abs(cu.slice->getPOC() - cu.slice->getRefPOC(REF_PIC_LIST_1, cu.refIdxBi[1])) == 1))));
+  }
+  void xCheckRDCostIBCMode    ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &pm, const EncTestMode& encTestMode );
+  void xCheckRDCostIBCModeMerge2Nx2N( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
 
-    void xCheckPLT(CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner,
-                   const EncTestMode &encTestMode);
+  void xCheckPLT              ( CodingStructure *&tempCS, CodingStructure *&bestCS, Partitioner &partitioner, const EncTestMode& encTestMode );
 };
 
 //! \}
 
-#endif   // __ENCMB__
+#endif // __ENCMB__

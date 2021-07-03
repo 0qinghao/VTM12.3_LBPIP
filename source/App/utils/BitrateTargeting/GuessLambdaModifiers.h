@@ -42,98 +42,96 @@
 #include <limits>
 
 /// Thrown if there is an error parsing the initial adjustment parameter
-class InitialAdjustmentParameterParseException : public RuntimeError
+class InitialAdjustmentParameterParseException: public RuntimeError
 {
   public:
-    virtual ~InitialAdjustmentParameterParseException() throw() {}
-
+    virtual ~InitialAdjustmentParameterParseException( ) throw( ) { }
   protected:
-    void outputWhat(std::ostream &o) const { o << "Error parsing the initial-adjustment parameter"; }
+    void outputWhat( std::ostream& o ) const { o << "Error parsing the initial-adjustment parameter"; }
 };
 
 /// Thrown if there is an error parsing the targets
-class TargetsParseException : public RuntimeError
+class TargetsParseException: public RuntimeError
 {
   public:
-    virtual ~TargetsParseException() throw() {}
-
+    virtual ~TargetsParseException( ) throw( ) { }
   protected:
-    void outputWhat(std::ostream &o) const { o << "Error parsing targets"; }
+    void outputWhat( std::ostream& o ) const { o << "Error parsing targets"; }
 };
 
 /// Thrown if there is an error parsing the meta-log
-class MetaLogParseException : public RuntimeError
+class MetaLogParseException: public RuntimeError
 {
   public:
-    virtual ~MetaLogParseException() throw() {}
-
+    virtual ~MetaLogParseException( ) throw( ) { }
   protected:
-    void outputWhat(std::ostream &o) const { o << "Error parsing meta log"; }
+    void outputWhat( std::ostream& o ) const { o << "Error parsing meta log"; }
 };
 
 /// Thrown if there is a mismatch in the vector sizes or the Lambda-modifier indexes
-class MismatchedIndexesException : public RuntimeError
+class MismatchedIndexesException: public RuntimeError
 {
   public:
-    virtual ~MismatchedIndexesException() throw() {}
-
+    virtual ~MismatchedIndexesException( ) throw( ) { }
   protected:
-    void outputWhat(std::ostream &o) const { o << "Mismatched vector sizes or lambda modifier indexes"; }
+    void outputWhat( std::ostream& o ) const { o << "Mismatched vector sizes or lambda modifier indexes"; }
 };
 
 /// Full meta-log entry
-template<typename TLambdaModifier> struct MetaLogEntry
+template< typename TLambdaModifier >
+struct MetaLogEntry
 {
-    TLambdaModifier     lambdaModifiers;
-    std::vector<double> bitrateVector;
+  TLambdaModifier lambdaModifiers;
+  std::vector< double > bitrateVector;
 };
 
 /// Contains a Lambda-modifier and bitrate for only a single index
 struct Point
 {
-    double lambdaModifier;
-    double bitrate;
+  double lambdaModifier;
+  double bitrate;
 };
 
 /// Performs interpolation/extrapolation to guess a single Lambda-modifier
 /// \param targetBitrate The target bitrate value that this Lambda-modifier is trying to reach
-/// \param point1 One of the two previously tried points where first is the Lambda-modifier and second is the obtained
-/// bitrate \param point2 One of the two previously tried points where first is the Lambda-modifier and second is the
-/// obtained bitrate \return The interpolated Lambda-modifier guess \pre Both given points must contain only positive
-/// non-zero values for first and second \pre The given points must have different first values and different second
-/// values.  If either the first values are the same or the second values are the same, then we have either a vertical
-/// or horizontal slope, and thus, interpolation cannot be performed.
-double polateLambdaModifier(double targetBitrate, const Point &point1, const Point &point2);
+/// \param point1 One of the two previously tried points where first is the Lambda-modifier and second is the obtained bitrate
+/// \param point2 One of the two previously tried points where first is the Lambda-modifier and second is the obtained bitrate
+/// \return The interpolated Lambda-modifier guess
+/// \pre Both given points must contain only positive non-zero values for first and second
+/// \pre The given points must have different first values and different second values.  If either the first values are the same or the second values are the same, then we have either a vertical or horizontal slope, and thus, interpolation cannot be performed.
+double polateLambdaModifier( double targetBitrate, const Point& point1, const Point& point2 );
 
 /// Guesses a single Lambda-modifier
-/// \param initialAdjustmentParameter If interpolation/extrapolation cannot be performed, then this parameter is used in
-/// the "increment" process. \param targetBitrate The target bitrate value that this Lambda-modifier is trying to reach
+/// \param initialAdjustmentParameter If interpolation/extrapolation cannot be performed, then this parameter is used in the "increment" process.
+/// \param targetBitrate The target bitrate value that this Lambda-modifier is trying to reach
 /// \param pointList The list of points that correspond with this index
-/// \param interDampeningFactor This factor is obtained based on guessed Lambda-modifiers for previous temporal layers.
-/// In some cases, this factor will scale down the change of this Lambda-modifier so that we are not making too many
-/// severe Lambda-modifier changes for a single encoder run. \return The Lambda-modifier guess \pre pointList cannot be
-/// empty \pre interDampeningFactor must be greater than zero and less than or equal to 1 (0 < interDampeningFactor <=
-/// 1)
-double guessLambdaModifier(double initialAdjustmentParameter, double targetBitrate, const std::list<Point> &pointList,
-                           double interDampeningFactor);
+/// \param interDampeningFactor This factor is obtained based on guessed Lambda-modifiers for previous temporal layers.  In some cases, this factor will scale down the change of this Lambda-modifier so that we are not making too many severe Lambda-modifier changes for a single encoder run.
+/// \return The Lambda-modifier guess
+/// \pre pointList cannot be empty
+/// \pre interDampeningFactor must be greater than zero and less than or equal to 1 (0 < interDampeningFactor <= 1)
+double guessLambdaModifier(
+    double initialAdjustmentParameter,
+    double targetBitrate,
+    const std::list< Point >& pointList,
+    double interDampeningFactor );
 
 /// Guesses all of the Lambda-modifiers
-/// \param initialAdjustmentParameter If interpolation/extrapolation cannot be performed, then this parameter is used in
-/// the "increment" process. \param targetBitrateVector The target bitrate values that we are trying to reach \param
-/// metaLogEntryList All of the previously run Lambda-modifiers and their corresponding bitrates from the meta-log
+/// \param initialAdjustmentParameter If interpolation/extrapolation cannot be performed, then this parameter is used in the "increment" process.
+/// \param targetBitrateVector The target bitrate values that we are trying to reach
+/// \param metaLogEntryList All of the previously run Lambda-modifiers and their corresponding bitrates from the meta-log
 /// \return Vector containing all of the guessed Lambda-modifiers
 /// \pre targetBitrateVector cannot be empty
 /// \pre metaLogEntryList cannot be empty
 /// \pre The size of targetBitrateVector must be the same as the size of bitrateVector in every item in metaLogEntryList
-/// \pre The size of targetBitrateVector must be the same as the size of lambdaModifiers in every item in
-/// metaLogEntryList
-std::vector<double> guessLambdaModifiers(double                                              initialAdjustmentParameter,
-                                         const std::vector<double> &                         targetBitrateVector,
-                                         const std::list<MetaLogEntry<std::vector<double>>> &metaLogEntryList);
+/// \pre The size of targetBitrateVector must be the same as the size of lambdaModifiers in every item in metaLogEntryList
+std::vector< double > guessLambdaModifiers(
+    double initialAdjustmentParameter,
+    const std::vector< double > &targetBitrateVector,
+    const std::list< MetaLogEntry< std::vector< double > > >& metaLogEntryList );
 
 /// Guesses all of the Lambda-modifiers
-/// This function performs all of the necessary input parsing.  It ends up calling the other guessLambdaModifiers
-/// overload to perform the actual calculations. \param o The output stream to write the guessed Lambda-modifiers to
+/// This function performs all of the necessary input parsing.  It ends up calling the other guessLambdaModifiers overload to perform the actual calculations.
+/// \param o The output stream to write the guessed Lambda-modifiers to
 /// \param initialAdjustmentParameterIstream The input stream that contains the initial adjustment parameter
 /// \param targetsIstream The input stream that contains the target bitrates
 /// \param metaLogIstream The input stream that contains the meta-log
@@ -141,7 +139,10 @@ std::vector<double> guessLambdaModifiers(double                                 
 /// \throw TargetsParseException if there is an error parsing the target bitrates
 /// \throw MetaLogParseException if there is an error parsing the meta-log
 /// \throw MismatchedIndexesException if there is a mismatch in the vector sizes or the Lambda-modifier indexes
-void guessLambdaModifiers(std::ostream &o, std::istream &initialAdjustmentParameterIstream,
-                          std::istream &targetsIstream, std::istream &metaLogIstream);
+void guessLambdaModifiers(
+    std::ostream& o,
+    std::istream& initialAdjustmentParameterIstream,
+    std::istream& targetsIstream,
+    std::istream& metaLogIstream );
 
 #endif

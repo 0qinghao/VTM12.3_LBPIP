@@ -53,35 +53,34 @@ class Mv;
 // ====================================================================================================================
 class MCTSInfo
 {
-  private:
-    Area m_tileArea;
+private:
+  Area  m_tileArea;
 
-  public:
-    MCTSInfo() : m_tileArea(Area(0, 0, 0, 0)){};
+public:
+  MCTSInfo() :
+    m_tileArea( Area( 0, 0, 0, 0 ) )
+  {};
 
-    void init(CodingStructure *cs, int ctuAddr);
+  void init( CodingStructure* cs, int ctuAddr );
 
-    Area        getTileArea() { return m_tileArea; }
-    const Area &getTileArea() const { return m_tileArea; }
+  Area        getTileArea()       { return m_tileArea; }
+  const Area& getTileArea() const { return m_tileArea; }
 
-    Area getTileAreaSubPelRestricted(const PredictionUnit &pu);
-    Area getTileAreaIntPelRestricted(const PredictionUnit &pu);
+  Area getTileAreaSubPelRestricted( const PredictionUnit &pu );
+  Area getTileAreaIntPelRestricted( const PredictionUnit &pu );
+
 };
 
-namespace MCTSHelper
-{
-    Area getTileAreaRestricted(const Area &tileArea, const int offLT, const int offRB);
-    void clipMvToArea(Mv &rcMv, const struct Area &block, const struct Area &clipArea, const SPS &sps,
-                      int mvFracBits = MV_FRACTIONAL_BITS_INTERNAL);
-    Area getTileArea(const CodingStructure *cs, const int ctuAddr);
-    bool isRefBlockAtRestrictedTileBoundary(const PredictionUnit &pu);
-    bool checkMvForMCTSConstraint(const PredictionUnit &pu, const Mv &mv,
-                                  const MvPrecision mvPrec = MV_PRECISION_QUARTER);
-    bool checkMvBufferForMCTSConstraint(const PredictionUnit &pu, bool msgFlag = false);
-    bool checkMvIsNotInRestrictedArea(const PredictionUnit &pu, const Mv &mv, const Area &restrArea,
-                                      const MvPrecision mvPrec);
-}   // namespace MCTSHelper
+namespace MCTSHelper {
+  Area getTileAreaRestricted         ( const Area& tileArea, const int offLT, const int offRB );
+  void clipMvToArea                  ( Mv& rcMv, const struct Area& block, const struct Area& clipArea, const SPS& sps, int mvFracBits = MV_FRACTIONAL_BITS_INTERNAL );
+  Area getTileArea                   ( const CodingStructure* cs, const int ctuAddr );
+  bool isRefBlockAtRestrictedTileBoundary( const PredictionUnit &pu );
+  bool checkMvForMCTSConstraint      ( const PredictionUnit &pu, const Mv& mv, const MvPrecision mvPrec = MV_PRECISION_QUARTER );
+  bool checkMvBufferForMCTSConstraint( const PredictionUnit &pu, bool msgFlag = false );
+  bool checkMvIsNotInRestrictedArea  ( const PredictionUnit &pu, const Mv& mv, const Area& restrArea, const MvPrecision mvPrec );
+}
 
 //! \}
 
-#endif   // __MCTS__
+#endif // __MCTS__

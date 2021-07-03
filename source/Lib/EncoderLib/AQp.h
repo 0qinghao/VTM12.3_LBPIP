@@ -51,47 +51,46 @@
 /// Local image characteristics for CUs on a specific depth
 class AQpLayer
 {
-  private:
-    uint32_t            m_uiAQPartWidth;
-    uint32_t            m_uiAQPartHeight;
-    uint32_t            m_uiNumAQPartInWidth;
-    uint32_t            m_uiNumAQPartInHeight;
-    double              m_dAvgActivity;
-    std::vector<double> m_acEncAQU;
+private:
+  uint32_t                  m_uiAQPartWidth;
+  uint32_t                  m_uiAQPartHeight;
+  uint32_t                  m_uiNumAQPartInWidth;
+  uint32_t                  m_uiNumAQPartInHeight;
+  double                m_dAvgActivity;
+  std::vector<double>   m_acEncAQU;
 
-  public:
-    AQpLayer(int iWidth, int iHeight, uint32_t uiAQPartWidth, uint32_t uiAQPartHeight);
-    virtual ~AQpLayer();
+public:
+  AQpLayer( int iWidth, int iHeight, uint32_t uiAQPartWidth, uint32_t uiAQPartHeight );
+  virtual ~AQpLayer();
 
-    uint32_t             getAQPartWidth() { return m_uiAQPartWidth; }
-    uint32_t             getAQPartHeight() { return m_uiAQPartHeight; }
-    uint32_t             getNumAQPartInWidth() { return m_uiNumAQPartInWidth; }
-    uint32_t             getNumAQPartInHeight() { return m_uiNumAQPartInHeight; }
-    uint32_t             getAQPartStride() { return m_uiNumAQPartInWidth; }
-    std::vector<double> &getQPAdaptationUnit() { return m_acEncAQU; }
-    double               getActivity(const Position &pos)
-    {
-        uint32_t uiAQUPosX = pos.x / m_uiAQPartWidth;
-        uint32_t uiAQUPosY = pos.y / m_uiAQPartHeight;
-        return m_acEncAQU[uiAQUPosY * m_uiNumAQPartInWidth + uiAQUPosX];
-    }
+  uint32_t                   getAQPartWidth()        { return m_uiAQPartWidth;       }
+  uint32_t                   getAQPartHeight()       { return m_uiAQPartHeight;      }
+  uint32_t                   getNumAQPartInWidth()   { return m_uiNumAQPartInWidth;  }
+  uint32_t                   getNumAQPartInHeight()  { return m_uiNumAQPartInHeight; }
+  uint32_t                   getAQPartStride()       { return m_uiNumAQPartInWidth;  }
+  std::vector<double>&   getQPAdaptationUnit()   { return m_acEncAQU;           }
+  double getActivity( const Position& pos)
+  {
+    uint32_t uiAQUPosX = pos.x / m_uiAQPartWidth;
+    uint32_t uiAQUPosY = pos.y / m_uiAQPartHeight;
+    return m_acEncAQU[uiAQUPosY * m_uiNumAQPartInWidth + uiAQUPosX];
+  }
 
-    double getAvgActivity() { return m_dAvgActivity; }
+  double                 getAvgActivity()        { return m_dAvgActivity;        }
 
-    void setAvgActivity(double d) { m_dAvgActivity = d; }
+  void                   setAvgActivity( double d )  { m_dAvgActivity = d; }
 };
 
 /// Source picture analyzer class
 class AQpPreanalyzer
 {
-  protected:
-    AQpPreanalyzer() {}
-    virtual ~AQpPreanalyzer() {}
-
-  public:
-    static void preanalyze(Picture *picture);
+protected:
+  AQpPreanalyzer() {}
+  virtual ~AQpPreanalyzer() {}
+public:
+  static void preanalyze( Picture* picture );
 };
 
 //! \}
 
-#endif   // __ENCPIC__
+#endif // __ENCPIC__

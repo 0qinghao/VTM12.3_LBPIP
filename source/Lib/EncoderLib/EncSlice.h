@@ -57,99 +57,95 @@ class EncGOP;
 // ====================================================================================================================
 
 /// slice encoder class
-class EncSlice : public WeightPredAnalysis
+class EncSlice
+  : public WeightPredAnalysis
 {
-  private:
-    // encoder configuration
-    EncCfg *m_pcCfg;   ///< encoder configuration class
+private:
+  // encoder configuration
+  EncCfg*                 m_pcCfg;                              ///< encoder configuration class
 
-    EncLib *m_pcLib;
+  EncLib*                 m_pcLib;
 
-    // pictures
-    PicList *m_pcListPic;   ///< list of pictures
+  // pictures
+  PicList*                m_pcListPic;                          ///< list of pictures
 
-    // processing units
-    EncGOP *m_pcGOPEncoder;   ///< GOP encoder
-    EncCu * m_pcCuEncoder;    ///< CU encoder
+  // processing units
+  EncGOP*                 m_pcGOPEncoder;                       ///< GOP encoder
+  EncCu*                  m_pcCuEncoder;                        ///< CU encoder
 
-    // encoder search
-    InterSearch *m_pcInterSearch;   ///< encoder search class
+  // encoder search
+  InterSearch*            m_pcInterSearch;                      ///< encoder search class
 
-    // coding tools
-    CABACWriter *m_CABACWriter;
-    TrQuant *    m_pcTrQuant;   ///< transform & quantization
+  // coding tools
+  CABACWriter*            m_CABACWriter;
+  TrQuant*                m_pcTrQuant;                          ///< transform & quantization
 
-    // RD optimization
-    RdCost *            m_pcRdCost;   ///< RD cost computation
-    CABACWriter *       m_CABACEstimator;
-    uint64_t            m_uiPicTotalBits;   ///< total bits for the picture
-    uint64_t            m_uiPicDist;        ///< total distortion for the picture
-    std::vector<double> m_vdRdPicLambda;    ///< array of lambda candidates
-    std::vector<double> m_vdRdPicQp;        ///< array of picture QP candidates (double-type for lambda)
-    std::vector<int>    m_viRdPicQp;        ///< array of picture QP candidates (int-type)
-    RateCtrl *          m_pcRateCtrl;       ///< Rate control manager
-    uint32_t            m_uiSliceSegmentIdx;
-    Ctx                 m_entropyCodingSyncContextState;   ///< context storage for state of contexts at the
-                                                           ///< wavefront/WPP/entropy-coding-sync second CTU of tile-row
-    SliceType m_encCABACTableIdx;
-    PLTBuf    m_palettePredictorSyncState;
+  // RD optimization
+  RdCost*                 m_pcRdCost;                           ///< RD cost computation
+  CABACWriter*            m_CABACEstimator;
+  uint64_t                  m_uiPicTotalBits;                     ///< total bits for the picture
+  uint64_t                  m_uiPicDist;                          ///< total distortion for the picture
+  std::vector<double>     m_vdRdPicLambda;                      ///< array of lambda candidates
+  std::vector<double>     m_vdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)
+  std::vector<int>        m_viRdPicQp;                          ///< array of picture QP candidates (int-type)
+  RateCtrl*               m_pcRateCtrl;                         ///< Rate control manager
+  uint32_t                    m_uiSliceSegmentIdx;
+  Ctx                     m_entropyCodingSyncContextState;      ///< context storage for state of contexts at the wavefront/WPP/entropy-coding-sync second CTU of tile-row
+  SliceType               m_encCABACTableIdx;
+  PLTBuf                  m_palettePredictorSyncState;
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU
-    int m_gopID;
+  int                     m_gopID;
 #endif
 
-  public:
-    double initializeLambda(const Slice *slice, const int GOPid, const int refQP,
-                            const double dQP);   // called by calculateLambda() and updateLambda()
+public:
+  double  initializeLambda(const Slice* slice, const int GOPid, const int refQP, const double dQP); // called by calculateLambda() and updateLambda()
 #if SHARP_LUMA_DELTA_QP || ENABLE_QPA_SUB_CTU
-    int    getGopId() const { return m_gopID; }
-    double calculateLambda(const Slice *slice, const int GOPid, const double refQP, const double dQP, int &iQP);
+  int     getGopId() const { return m_gopID; }
+  double  calculateLambda( const Slice* slice, const int GOPid, const double refQP, const double dQP, int &iQP );
 #endif
-    void setUpLambda(Slice *slice, const double dLambda, int iQP);
+  void    setUpLambda( Slice* slice, const double dLambda, int iQP );
 
 #if ENABLE_QPA
-    int m_adaptedLumaQP;
+  int                     m_adaptedLumaQP;
 
 #endif
-    EncSlice();
-    virtual ~EncSlice();
+  EncSlice();
+  virtual ~EncSlice();
 
-    void create(int iWidth, int iHeight, ChromaFormat chromaFormat, uint32_t iMaxCUWidth, uint32_t iMaxCUHeight,
-                uint8_t uhTotalDepth);
-    void destroy();
-    void init(EncLib *pcEncLib, const SPS &sps);
+  void    create              ( int iWidth, int iHeight, ChromaFormat chromaFormat, uint32_t iMaxCUWidth, uint32_t iMaxCUHeight, uint8_t uhTotalDepth );
+  void    destroy             ();
+  void    init                ( EncLib* pcEncLib, const SPS& sps );
 
-    /// preparation of slice encoding (reference marking, QP and lambda)
-    void initEncSlice(Picture *pcPic, const int pocLast, const int pocCurr, const int iGOPid, Slice *&rpcSlice,
-                      const bool isField, bool isEncodeLtRef, int layerId);
+  /// preparation of slice encoding (reference marking, QP and lambda)
+  void    initEncSlice        ( Picture*  pcPic, const int pocLast, const int pocCurr,
+                                const int iGOPid, Slice*& rpcSlice, const bool isField, bool isEncodeLtRef, int layerId );
 
-    void resetQP(Picture *pic, int sliceQP, double lambda);
+  void    resetQP             ( Picture* pic, int sliceQP, double lambda );
 
-    // compress and encode slice
-    void precompressSlice(Picture *pcPic);   ///< precompress slice for multi-loop slice-level QP opt.
-    void compressSlice(Picture *pcPic, const bool bCompressEntireSlice,
-                       const bool bFastDeltaQP);   ///< analysis stage of slice
-    void calCostSliceI(Picture *pcPic);
-    void calCostPictureI(Picture *picture);
-    void setLosslessSlice(Picture *pcPic, bool b);   ///< Set if the slice is lossless or not
-    void encodeSlice(Picture *pcPic, OutputBitstream *pcSubstreams, uint32_t &numBinsCoded);
-    void encodeCtus(Picture *pcPic, const bool bCompressEntireSlice, const bool bFastDeltaQP, EncLib *pcEncLib);
-    void checkDisFracMmvd(Picture *pcPic, uint32_t startCtuTsAddr, uint32_t boundingCtuTsAddr);
-    void setJointCbCrModes(CodingStructure &cs, const Position topLeftLuma, const Size sizeLuma);
+  // compress and encode slice
+  void    precompressSlice    ( Picture* pcPic                                     );      ///< precompress slice for multi-loop slice-level QP opt.
+  void    compressSlice       ( Picture* pcPic, const bool bCompressEntireSlice, const bool bFastDeltaQP );      ///< analysis stage of slice
+  void    calCostSliceI       ( Picture* pcPic );
+  void    calCostPictureI     ( Picture* picture );
+  void    setLosslessSlice(Picture* pcPic, bool b);      ///< Set if the slice is lossless or not
+  void    encodeSlice         ( Picture* pcPic, OutputBitstream* pcSubstreams, uint32_t &numBinsCoded );
+  void    encodeCtus          ( Picture* pcPic, const bool bCompressEntireSlice, const bool bFastDeltaQP, EncLib* pcEncLib );
+  void    checkDisFracMmvd    ( Picture* pcPic, uint32_t startCtuTsAddr, uint32_t boundingCtuTsAddr );
+  void    setJointCbCrModes( CodingStructure& cs, const Position topLeftLuma, const Size sizeLuma );
 
-    // misc. functions
-    void setSearchRange(Slice *pcSlice);   ///< set ME range adaptively
+  // misc. functions
+  void    setSearchRange      ( Slice* pcSlice  );                                  ///< set ME range adaptively
 
-    EncCu *  getCUEncoder() { return m_pcCuEncoder; }   ///< CU encoder
-    uint32_t getSliceSegmentIdx() { return m_uiSliceSegmentIdx; }
-    void     setSliceSegmentIdx(uint32_t i) { m_uiSliceSegmentIdx = i; }
+  EncCu*  getCUEncoder        ()                    { return m_pcCuEncoder; }                        ///< CU encoder
+  uint32_t    getSliceSegmentIdx  ()                    { return m_uiSliceSegmentIdx;       }
+  void    setSliceSegmentIdx  (uint32_t i)              { m_uiSliceSegmentIdx = i;          }
 
-    SliceType getEncCABACTableIdx() const { return m_encCABACTableIdx; }
-    void      setEncCABACTableIdx(SliceType b) { m_encCABACTableIdx = b; }
-
-  private:
-    double xGetQPValueAccordingToLambda(double lambda);
+  SliceType getEncCABACTableIdx() const             { return m_encCABACTableIdx;        }
+  void    setEncCABACTableIdx (SliceType b)         { m_encCABACTableIdx = b; }
+private:
+  double  xGetQPValueAccordingToLambda ( double lambda );
 };
 
 //! \}
 
-#endif   // __ENCSLICE__
+#endif // __ENCSLICE__

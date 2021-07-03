@@ -36,7 +36,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include <stdio.h>
 #include <fstream>
@@ -53,62 +53,57 @@
 #include "SEIwrite.h"
 class BitstreamExtractorApp : public BitstreamExtractorAppCfg
 {
-  public:
-    BitstreamExtractorApp();
-    virtual ~BitstreamExtractorApp() {}
 
-    uint32_t decode();   ///< main decoding function
+public:
+  BitstreamExtractorApp();
+  virtual ~BitstreamExtractorApp         ()  {}
 
-  protected:
-    void xPrintVPSInfo(VPS *vps);
-    void xPrintSubPicInfo(PPS *pps);
-    void xRewriteSPS(SPS &targetSPS, const SPS &sourceSPS, SubPic &subPic);
-    void xRewritePPS(PPS &targetPPS, const PPS &sourcePPS, const SPS &sourceSPS, SubPic &subPic);
-    bool xCheckSeiSubpicture(SEIMessages SEIs, int targetSubPicId, bool &rmAllFillerInSubpicExt, bool lastSliceWritten,
-                             bool isVclNalUnitRemoved);
+  uint32_t  decode            (); ///< main decoding function
+
+protected:
+  void xPrintVPSInfo (VPS *vps);
+  void xPrintSubPicInfo (PPS *pps);
+  void xRewriteSPS (SPS &targetSPS, const SPS &sourceSPS, SubPic &subPic);
+  void xRewritePPS (PPS &targetPPS, const PPS &sourcePPS, const SPS &sourceSPS, SubPic &subPic);
+  bool xCheckSeiSubpicture(SEIMessages SEIs, int targetSubPicId, bool &rmAllFillerInSubpicExt, bool lastSliceWritten, bool isVclNalUnitRemoved);
 
 #if JVET_R0107_BITSTREAM_EXTACTION
-    Slice xParseSliceHeader(InputNALUnit &nalu);
-    bool  xCheckSliceSubpicture(Slice &slice, int subPicId);
+  Slice xParseSliceHeader(InputNALUnit &nalu);
+  bool  xCheckSliceSubpicture(Slice &slice, int subPicId);
 #else
-    bool xCheckSliceSubpicture(InputNALUnit &nalu, int subPicId);
+  bool xCheckSliceSubpicture(InputNALUnit &nalu, int subPicId);
 #endif
-    void xReadPicHeader(InputNALUnit &nalu);
-    bool xCheckSEIsSubPicture(SEIMessages &SEIs, InputNALUnit &nalu, std::ostream &out, int subpicId);
-    bool xCheckScalableNestingSEI(SEIScalableNesting *seiNesting, InputNALUnit &nalu, VPS *vps);
+  void xReadPicHeader(InputNALUnit &nalu);
+  bool xCheckSEIsSubPicture(SEIMessages& SEIs, InputNALUnit& nalu, std::ostream& out, int subpicId);
+  bool xCheckScalableNestingSEI(SEIScalableNesting *seiNesting, InputNALUnit& nalu, VPS *vps);
 
-    void xSetSPSUpdated(int spsId) { return m_updatedSPSList.push_back(spsId); }
-    bool xIsSPSUpdate(int spsId)
-    {
-        return (std::find(m_updatedSPSList.begin(), m_updatedSPSList.end(), spsId) != m_updatedSPSList.end());
-    }
-    void xClearSPSUpdated(int spsId)
-    {
-        m_updatedSPSList.erase(std::remove(m_updatedSPSList.begin(), m_updatedSPSList.end(), spsId));
-    };
+  void xSetSPSUpdated(int spsId)   { return m_updatedSPSList.push_back(spsId); }
+  bool xIsSPSUpdate(int spsId)     { return (std::find(m_updatedSPSList.begin(),m_updatedSPSList.end(), spsId) != m_updatedSPSList.end()); }
+  void xClearSPSUpdated(int spsId) { m_updatedSPSList.erase(std::remove(m_updatedSPSList.begin(), m_updatedSPSList.end(), spsId)); };
 
-    bool xCheckNumSubLayers(InputNALUnit &nalu, VPS *vps);
+  bool xCheckNumSubLayers(InputNALUnit &nalu, VPS *vps);
 
-    void xWriteVPS(VPS *vps, std::ostream &out, int layerId, int temporalId);
-    void xWriteSPS(SPS *sps, std::ostream &out, int layerId, int temporalId);
-    void xWritePPS(PPS *pps, std::ostream &out, int layerId, int temporalId);
+  void xWriteVPS(VPS *vps, std::ostream& out, int layerId, int temporalId);
+  void xWriteSPS(SPS *sps, std::ostream& out, int layerId, int temporalId);
+  void xWritePPS(PPS *pps, std::ostream& out, int layerId, int temporalId);
 
-    ParameterSetManager m_parameterSetManager;
-    HLSyntaxReader      m_hlSynaxReader;
-    HLSWriter           m_hlSyntaxWriter;
-    SEIReader           m_seiReader;
-    SEIWriter           m_seiWriter;
-    HRD                 m_hrd;
+  ParameterSetManager   m_parameterSetManager;
+  HLSyntaxReader        m_hlSynaxReader;
+  HLSWriter             m_hlSyntaxWriter;
+  SEIReader             m_seiReader;
+  SEIWriter             m_seiWriter;
+  HRD                   m_hrd;
 
-    int  m_vpsId;
-    bool m_removeTimingSEI;
+  int                   m_vpsId;
+  bool                  m_removeTimingSEI;
 
-    PicHeader        m_picHeader;
-    int              m_prevTid0Poc;
-    int              m_prevPicPOC;
-    std::vector<int> m_updatedVPSList;
-    std::vector<int> m_updatedSPSList;
-    std::vector<int> m_updatedPPSList;
+  PicHeader             m_picHeader;
+  int                   m_prevTid0Poc;
+  int                   m_prevPicPOC;
+  std::vector<int>      m_updatedVPSList;
+  std::vector<int>      m_updatedSPSList;
+  std::vector<int>      m_updatedPPSList;
 };
 
-#endif   // __BITSTREAMEXTRACTORAPP__
+#endif // __BITSTREAMEXTRACTORAPP__
+

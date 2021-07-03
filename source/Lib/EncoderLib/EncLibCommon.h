@@ -43,24 +43,25 @@
 
 class EncLibCommon
 {
-  private:
-    int                  m_apsIdStart;   ///< ALF APS id, APS id space is shared across all layers
-    ParameterSetMap<SPS> m_spsMap;       ///< SPS, it is shared across all layers
-    ParameterSetMap<PPS> m_ppsMap;       ///< PPS, it is shared across all layers
-    ParameterSetMap<APS> m_apsMap;       ///< APS, it is shared across all layers
-    PicList              m_cListPic;     ///< DPB, it is shared across all layers
-    VPS                  m_vps;
-    int m_layerDecPicBuffering[MAX_VPS_LAYERS * MAX_TLAYER];   // to store number of required DPB pictures per layer
+private:
+  int                       m_apsIdStart;         ///< ALF APS id, APS id space is shared across all layers
+  ParameterSetMap<SPS>      m_spsMap;             ///< SPS, it is shared across all layers
+  ParameterSetMap<PPS>      m_ppsMap;             ///< PPS, it is shared across all layers
+  ParameterSetMap<APS>      m_apsMap;             ///< APS, it is shared across all layers
+  PicList                   m_cListPic;           ///< DPB, it is shared across all layers
+  VPS                       m_vps;
+  int                       m_layerDecPicBuffering[MAX_VPS_LAYERS*MAX_TLAYER];  // to store number of required DPB pictures per layer
 
-  public:
-    EncLibCommon();
-    virtual ~EncLibCommon();
+public:
+  EncLibCommon();
+  virtual ~EncLibCommon();
 
-    int &                 getApsIdStart() { return m_apsIdStart; }
-    PicList &             getPictureBuffer() { return m_cListPic; }
-    ParameterSetMap<SPS> &getSpsMap() { return m_spsMap; }
-    ParameterSetMap<PPS> &getPpsMap() { return m_ppsMap; }
-    ParameterSetMap<APS> &getApsMap() { return m_apsMap; }
-    VPS *                 getVPS() { return &m_vps; }
-    int *                 getDecPicBuffering() { return m_layerDecPicBuffering; }
+  int&                     getApsIdStart()         { return m_apsIdStart; }
+  PicList&                 getPictureBuffer()      { return m_cListPic;   }
+  ParameterSetMap<SPS>&    getSpsMap()             { return m_spsMap;     }
+  ParameterSetMap<PPS>&    getPpsMap()             { return m_ppsMap;     }
+  ParameterSetMap<APS>&    getApsMap()             { return m_apsMap;     }
+  VPS*                     getVPS()                { return &m_vps;       }
+  int*                     getDecPicBuffering()    { return m_layerDecPicBuffering; }
 };
+

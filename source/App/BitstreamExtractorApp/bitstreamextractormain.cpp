@@ -42,70 +42,71 @@
 // Main function
 // ====================================================================================================================
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    int returnCode = EXIT_SUCCESS;
+  int returnCode = EXIT_SUCCESS;
 
-    // print information
-    fprintf(stdout, "\n");
-    fprintf(stdout, "VVCSoftware: VTM Bitstream Extractor Version %s ", VTM_VERSION);
-    fprintf(stdout, NVM_ONOS);
-    fprintf(stdout, NVM_COMPILEDBY);
-    fprintf(stdout, NVM_BITS);
+  // print information
+  fprintf( stdout, "\n" );
+  fprintf( stdout, "VVCSoftware: VTM Bitstream Extractor Version %s ", VTM_VERSION );
+  fprintf( stdout, NVM_ONOS );
+  fprintf( stdout, NVM_COMPILEDBY );
+  fprintf( stdout, NVM_BITS );
 #if ENABLE_SIMD_OPT
-    std::string                       SIMD;
-    df::program_options_lite::Options optsSimd;
-    optsSimd.addOptions()("SIMD", SIMD, std::string(""), "");
-    df::program_options_lite::SilentReporter err;
-    df::program_options_lite::scanArgv(optsSimd, argc, (const char **) argv, err);
-    fprintf(stdout, "[SIMD=%s] ", read_x86_extension(SIMD));
+  std::string SIMD;
+  df::program_options_lite::Options optsSimd;
+  optsSimd.addOptions()( "SIMD", SIMD, std::string( "" ), "" );
+  df::program_options_lite::SilentReporter err;
+  df::program_options_lite::scanArgv( optsSimd, argc, ( const char** ) argv, err );
+  fprintf( stdout, "[SIMD=%s] ", read_x86_extension( SIMD ) );
 #endif
 #if ENABLE_TRACING
-    fprintf(stdout, "[ENABLE_TRACING] ");
+  fprintf( stdout, "[ENABLE_TRACING] " );
 #endif
-    fprintf(stdout, "\n");
+  fprintf( stdout, "\n" );
 
-    BitstreamExtractorApp *extractorApp = new BitstreamExtractorApp;
-    // parse configuration
-    if (!extractorApp->parseCfg(argc, argv))
-    {
-        returnCode = EXIT_FAILURE;
-        return returnCode;
-    }
-
-    // starting time
-    double  timeDifference;
-    clock_t startTime = clock();
-
-    // call decoding function
-#ifndef _DEBUG
-    try
-    {
-#endif   // !_DEBUG
-        if (0 != extractorApp->decode())
-        {
-            printf("\n\n***ERROR*** A decoding mismatch occured: signalled md5sum does not match\n");
-            returnCode = EXIT_FAILURE;
-        }
-#ifndef _DEBUG
-    }
-    catch (Exception &e)
-    {
-        std::cerr << e.what() << std::endl;
-        returnCode = EXIT_FAILURE;
-    }
-    catch (...)
-    {
-        std::cerr << "Unspecified error occurred" << std::endl;
-        returnCode = EXIT_FAILURE;
-    }
-#endif
-
-    // ending time
-    timeDifference = (double) (clock() - startTime) / CLOCKS_PER_SEC;
-    printf("\n Total Time: %12.3f sec.\n", timeDifference);
-
-    delete extractorApp;
-
+  BitstreamExtractorApp *extractorApp = new BitstreamExtractorApp;
+  // parse configuration
+  if(!extractorApp->parseCfg( argc, argv ))
+  {
+    returnCode = EXIT_FAILURE;
     return returnCode;
+  }
+
+  // starting time
+  double timeDifference;
+  clock_t startTime = clock();
+
+  // call decoding function
+#ifndef _DEBUG
+  try
+  {
+#endif // !_DEBUG
+    if( 0 != extractorApp->decode() )
+    {
+      printf( "\n\n***ERROR*** A decoding mismatch occured: signalled md5sum does not match\n" );
+      returnCode = EXIT_FAILURE;
+    }
+#ifndef _DEBUG
+  }
+  catch( Exception &e )
+  {
+    std::cerr << e.what() << std::endl;
+    returnCode = EXIT_FAILURE;
+  }
+  catch( ... )
+  {
+    std::cerr << "Unspecified error occurred" << std::endl;
+    returnCode = EXIT_FAILURE;
+  }
+#endif
+
+  // ending time
+  timeDifference = (double)(clock()-startTime) / CLOCKS_PER_SEC;
+  printf("\n Total Time: %12.3f sec.\n", timeDifference);
+
+  delete extractorApp;
+
+  return returnCode;
 }
+

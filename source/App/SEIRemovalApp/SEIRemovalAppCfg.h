@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CommonLib/CommonDef.h"
 #include <vector>
@@ -55,21 +55,23 @@
 /// Decoder configuration class
 class SEIRemovalAppCfg
 {
-  protected:
-    std::string m_bitstreamFileNameIn;    ///< output bitstream file name
-    std::string m_bitstreamFileNameOut;   ///< input bitstream file name
-    bool        m_discardPrefixSEIs;
-    bool        m_discardSuffixSEIs;
-    int         m_numNALUnitsToSkip;
-    int         m_numNALUnitsToWrite;
+protected:
+  std::string   m_bitstreamFileNameIn;                ///< output bitstream file name
+  std::string   m_bitstreamFileNameOut;               ///< input bitstream file name
+  bool          m_discardPrefixSEIs;
+  bool          m_discardSuffixSEIs;
+  int           m_numNALUnitsToSkip;
+  int           m_numNALUnitsToWrite;
 
-  public:
-    SEIRemovalAppCfg();
-    virtual ~SEIRemovalAppCfg();
+public:
+  SEIRemovalAppCfg();
+  virtual ~SEIRemovalAppCfg();
 
-    bool parseCfg(int argc, char *argv[]);   ///< initialize option class from configuration
+  bool  parseCfg        ( int argc, char* argv[] );   ///< initialize option class from configuration
 };
 
 //! \}
 
-#endif   // __SEIREMOVALAPPCFG__
+#endif  // __SEIREMOVALAPPCFG__
+
+

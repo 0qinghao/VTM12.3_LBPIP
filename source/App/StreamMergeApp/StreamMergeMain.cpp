@@ -31,9 +31,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     StreamMergeMain.cpp
-    \brief    Stream merge application main
-*/
+ /** \file     StreamMergeMain.cpp
+     \brief    Stream merge application main
+ */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,54 +41,54 @@
 #include "StreamMergeApp.h"
 #include "program_options_lite.h"
 
-//! \ingroup DecoderApp
-//! \{
+ //! \ingroup DecoderApp
+ //! \{
 
-// ====================================================================================================================
-// Main function
-// ====================================================================================================================
+ // ====================================================================================================================
+ // Main function
+ // ====================================================================================================================
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    int returnCode = EXIT_SUCCESS;
+  int returnCode = EXIT_SUCCESS;
 
-    if (argc < 4)
-    {
-        printf("usage: %s <bitstream1> <bitstream2> [<bitstream3> ...] <outfile>\n", argv[0]);
-        return -1;
-    }
+  if (argc < 4)
+  {
+    printf("usage: %s <bitstream1> <bitstream2> [<bitstream3> ...] <outfile>\n", argv[0]);
+    return -1;
+  }
 
-    // print information
-    fprintf(stdout, "\n");
-    fprintf(stdout, "VVCSoftware: VTM Version %s ", VTM_VERSION);
-    fprintf(stdout, "\n");
+  // print information
+  fprintf(stdout, "\n");
+  fprintf(stdout, "VVCSoftware: VTM Version %s ", VTM_VERSION);
+  fprintf(stdout, "\n");
 
-    StreamMergeApp *pStrMergeApp = new StreamMergeApp;
-    // parse configuration
-    if (!pStrMergeApp->parseCfg(argc, argv))
-    {
-        returnCode = EXIT_FAILURE;
-        return returnCode;
-    }
-
-    // starting time
-    double  dResult;
-    clock_t lBefore = clock();
-
-    // call decoding function
-    if (0 != pStrMergeApp->mergeStreams())
-    {
-        printf("\n\n***ERROR*** A merge error happened\n");
-        returnCode = EXIT_FAILURE;
-    }
-
-    // ending time
-    dResult = (double) (clock() - lBefore) / CLOCKS_PER_SEC;
-    printf("\n Total Time: %12.3f sec.\n", dResult);
-
-    delete pStrMergeApp;
-
+  StreamMergeApp *pStrMergeApp = new StreamMergeApp;
+  // parse configuration
+  if (!pStrMergeApp->parseCfg(argc, argv))
+  {
+    returnCode = EXIT_FAILURE;
     return returnCode;
+  }
+
+  // starting time
+  double dResult;
+  clock_t lBefore = clock();
+
+  // call decoding function
+  if (0 != pStrMergeApp->mergeStreams())
+  {
+    printf("\n\n***ERROR*** A merge error happened\n");
+    returnCode = EXIT_FAILURE;
+  }
+
+  // ending time
+  dResult = (double)(clock() - lBefore) / CLOCKS_PER_SEC;
+  printf("\n Total Time: %12.3f sec.\n", dResult);
+
+  delete pStrMergeApp;
+
+  return returnCode;
 }
 
 //! \}

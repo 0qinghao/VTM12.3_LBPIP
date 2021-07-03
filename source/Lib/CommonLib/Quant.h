@@ -54,150 +54,132 @@
 // ====================================================================================================================
 struct TrQuantParams
 {
-    int rightShift;
-    int qScale;
+  int     rightShift;
+  int     qScale;
 };
 
 /// QP struct
 class QpParam
 {
-  public:
-    int Qps[2];
-    int pers[2];
-    int rems[2];
+public:
+  int Qps[2];
+  int pers[2];
+  int rems[2];
 
-  private:
-    QpParam(const int qpy, const ComponentID compID, const int qpBdOffset, const int internalMinusInputBitDepth,
-            const int chromaQPOffset, const ChromaFormat chFmt, const int dqp, const SPS *sps,
-            const bool applyACTQpoffset);
+private:
 
-  public:
-    QpParam(const TransformUnit &tu, const ComponentID &compID, const int QP = -MAX_INT,
-            const bool allowACTQpoffset = true);
+  QpParam(const int           qpy,
+          const ComponentID   compID,
+          const int           qpBdOffset,
+          const int           internalMinusInputBitDepth,
+          const int           chromaQPOffset,
+          const ChromaFormat  chFmt,
+          const int           dqp
+        , const SPS           *sps
+        , const bool          applyACTQpoffset
+  );
 
-    int Qp(const bool ts) const { return Qps[ts ? 1 : 0]; }
-    int per(const bool ts) const { return pers[ts ? 1 : 0]; }
-    int rem(const bool ts) const { return rems[ts ? 1 : 0]; }
+public:
 
-};   // END STRUCT DEFINITION QpParam
+  QpParam(const TransformUnit& tu, const ComponentID &compID, const int QP = -MAX_INT, const bool allowACTQpoffset = true);
+
+  int Qp ( const bool ts ) const { return Qps [ts?1:0]; }
+  int per( const bool ts ) const { return pers[ts?1:0]; }
+  int rem( const bool ts ) const { return rems[ts?1:0]; }
+
+}; // END STRUCT DEFINITION QpParam
 
 /// transform and quantization class
 class Quant
 {
-  public:
-    Quant(const Quant *other);
-    virtual ~Quant();
+public:
+  Quant( const Quant* other );
+  virtual ~Quant();
 
-    // initialize class
-    virtual void init(uint32_t uiMaxTrSize, bool useRDOQ = false, bool useRDOQTS = false,
+  // initialize class
+  virtual void init( uint32_t uiMaxTrSize,
+                     bool useRDOQ = false,
+                     bool useRDOQTS = false,
 #if T0196_SELECTIVE_RDOQ
-                      bool useSelectiveRDOQ = false
+                     bool useSelectiveRDOQ = false
 #endif
-    );
+                     );
 
-  public:
-    void transformSkipQuantOneSample(TransformUnit &tu, const ComponentID &compID, const TCoeff &resiDiff,
-                                     TCoeff &coeff, const uint32_t &uiPos, const QpParam &cQP,
-                                     const bool bUseHalfRoundingPoint);
-    void invTrSkipDeQuantOneSample(TransformUnit &tu, const ComponentID &compID, const TCoeff &pcCoeff,
-                                   Pel &reconSample, const uint32_t &uiPos, const QpParam &cQP);
+public:
+
+  void   transformSkipQuantOneSample(TransformUnit &tu, const ComponentID &compID, const TCoeff &resiDiff, TCoeff &coeff,    const uint32_t &uiPos, const QpParam &cQP, const bool bUseHalfRoundingPoint);
+  void   invTrSkipDeQuantOneSample  (TransformUnit &tu, const ComponentID &compID, const TCoeff &pcCoeff,  Pel &reconSample, const uint32_t &uiPos, const QpParam &cQP);
 
 #if RDOQ_CHROMA_LAMBDA
-    void setLambdas(const double lambdas[MAX_NUM_COMPONENT])
-    {
-        for (uint32_t component = 0; component < MAX_NUM_COMPONENT; component++)
-            m_lambdas[component] = lambdas[component];
-    }
-    void selectLambda(const ComponentID compIdx) { m_dLambda = m_lambdas[MAP_CHROMA(compIdx)]; }
-    void getLambdas(double (&lambdas)[MAX_NUM_COMPONENT]) const
-    {
-        for (uint32_t component = 0; component < MAX_NUM_COMPONENT; component++)
-            lambdas[component] = m_lambdas[component];
-    }
+  void   setLambdas              ( const double lambdas[MAX_NUM_COMPONENT] )   { for (uint32_t component = 0; component < MAX_NUM_COMPONENT; component++) m_lambdas[component] = lambdas[component]; }
+  void   selectLambda            ( const ComponentID compIdx )                 { m_dLambda = m_lambdas[ MAP_CHROMA(compIdx) ]; }
+  void   getLambdas              ( double (&lambdas)[MAX_NUM_COMPONENT]) const { for (uint32_t component = 0; component < MAX_NUM_COMPONENT; component++) lambdas[component] = m_lambdas[component]; }
 #endif
-    void   setLambda(const double dLambda) { m_dLambda = dLambda; }
-    double getLambda() const { return m_dLambda; }
-    void   lambdaAdjustColorTrans(bool forward);
-    void   resetStore() { m_resetStore = true; }
+  void   setLambda               ( const double dLambda )                      { m_dLambda = dLambda; }
+  double getLambda               () const                                      { return m_dLambda; }
+  void   lambdaAdjustColorTrans(bool forward);
+  void   resetStore() { m_resetStore = true; }
 
-    int *getQuantCoeff(uint32_t list, int qp, uint32_t sizeX, uint32_t sizeY)
-    {
-        return m_quantCoef[sizeX][sizeY][list][qp];
-    };   //!< get Quant Coefficent
-    int *getDequantCoeff(uint32_t list, int qp, uint32_t sizeX, uint32_t sizeY)
-    {
-        return m_dequantCoef[sizeX][sizeY][list][qp];
-    };   //!< get DeQuant Coefficent
+  int* getQuantCoeff             ( uint32_t list, int qp, uint32_t sizeX, uint32_t sizeY ) { return m_quantCoef            [sizeX][sizeY][list][qp]; };  //!< get Quant Coefficent
+  int* getDequantCoeff           ( uint32_t list, int qp, uint32_t sizeX, uint32_t sizeY ) { return m_dequantCoef          [sizeX][sizeY][list][qp]; };  //!< get DeQuant Coefficent
 
-    void setUseScalingList(bool bUseScalingList) { m_scalingListEnabledFlag = bUseScalingList; };
-    bool getUseScalingList(const uint32_t width, const uint32_t height, const bool isTransformSkip,
-                           const bool lfnstApplied, const bool disableScalingMatrixForLFNSTBlks,
-                           const bool disableSMforACT)
-    {
-        return (m_scalingListEnabledFlag && !isTransformSkip && (!lfnstApplied || !disableScalingMatrixForLFNSTBlks)
-                && !disableSMforACT);
-    }
-    void setScalingListDec(const ScalingList &scalingList);
-    void processScalingListEnc(int *coeff, int *quantcoeff, int qpMod6, uint32_t height, uint32_t width, uint32_t ratio,
-                               int sizuNum, uint32_t dc);
-    void processScalingListDec(const int *coeff, int *dequantcoeff, int qpMod6, uint32_t height, uint32_t width,
-                               uint32_t ratio, int sizuNum, uint32_t dc);
+  void setUseScalingList         ( bool bUseScalingList){ m_scalingListEnabledFlag = bUseScalingList; };
+  bool getUseScalingList(const uint32_t width, const uint32_t height, const bool isTransformSkip, const bool lfnstApplied, const bool disableScalingMatrixForLFNSTBlks, const bool disableSMforACT)
+  {
+    return (m_scalingListEnabledFlag && !isTransformSkip && (!lfnstApplied || !disableScalingMatrixForLFNSTBlks) && !disableSMforACT);
+  }
+  void setScalingListDec         ( const ScalingList &scalingList);
+  void processScalingListEnc     ( int *coeff, int *quantcoeff, int qpMod6, uint32_t height, uint32_t width, uint32_t ratio, int sizuNum, uint32_t dc);
+  void processScalingListDec     ( const int *coeff, int *dequantcoeff, int qpMod6, uint32_t height, uint32_t width, uint32_t ratio, int sizuNum, uint32_t dc);
 
-    virtual void setFlatScalingList(const int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths);
-    virtual void setScalingList(ScalingList *scalingList, const int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE],
-                                const BitDepths &bitDepths);
+  virtual void setFlatScalingList( const int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths);
+  virtual void setScalingList    ( ScalingList *scalingList, const int maxLog2TrDynamicRange[MAX_NUM_CHANNEL_TYPE], const BitDepths &bitDepths);
 
-    // quantization
-    virtual void quant(TransformUnit &tu, const ComponentID &compID, const CCoeffBuf &pSrc, TCoeff &uiAbsSum,
-                       const QpParam &cQP, const Ctx &ctx);
-    // de-quantization
-    virtual void dequant(const TransformUnit &tu, CoeffBuf &dstCoeff, const ComponentID &compID, const QpParam &cQP);
+  // quantization
+  virtual void quant             ( TransformUnit &tu, const ComponentID &compID, const CCoeffBuf &pSrc, TCoeff &uiAbsSum, const QpParam &cQP, const Ctx& ctx );
+  // de-quantization
+  virtual void dequant           ( const TransformUnit &tu, CoeffBuf &dstCoeff, const ComponentID &compID, const QpParam &cQP );
 
-  protected:
+protected:
+
 #if T0196_SELECTIVE_RDOQ
-    bool xNeedRDOQ(TransformUnit &tu, const ComponentID &compID, const CCoeffBuf &pSrc, const QpParam &cQP);
+  bool xNeedRDOQ                 ( TransformUnit &tu, const ComponentID &compID, const CCoeffBuf &pSrc, const QpParam &cQP );
 #endif
 
-    double   m_dLambda;
-    uint32_t m_uiMaxTrSize;
-    bool     m_useRDOQ;
-    bool     m_useRDOQTS;
+  double   m_dLambda;
+  uint32_t     m_uiMaxTrSize;
+  bool     m_useRDOQ;
+  bool     m_useRDOQTS;
 #if T0196_SELECTIVE_RDOQ
-    bool m_useSelectiveRDOQ;
+  bool     m_useSelectiveRDOQ;
 #endif
-  private:
-    void xInitScalingList(const Quant *other);
-    void xDestroyScalingList();
-    void xSetFlatScalingList(uint32_t list, uint32_t sizeX, uint32_t sizeY, int qp);
-    void xSetScalingListEnc(ScalingList *scalingList, uint32_t list, uint32_t size, int qp, uint32_t scalingListId);
-    void xSetScalingListDec(const ScalingList &scalingList, uint32_t list, uint32_t size, int qp,
-                            uint32_t scalingListId);
-    void xSetRecScalingListEnc(ScalingList *scalingList, uint32_t list, uint32_t sizew, uint32_t sizeh, int qp,
-                               uint32_t scalingListId);
-    void xSetRecScalingListDec(const ScalingList &scalingList, uint32_t list, uint32_t sizew, uint32_t sizeh, int qp,
-                               uint32_t scalingListId);
+private:
+  void xInitScalingList   ( const Quant* other );
+  void xDestroyScalingList();
+  void xSetFlatScalingList( uint32_t list, uint32_t sizeX, uint32_t sizeY, int qp );
+  void xSetScalingListEnc(ScalingList *scalingList, uint32_t list, uint32_t size, int qp, uint32_t scalingListId);
+  void xSetScalingListDec(const ScalingList &scalingList, uint32_t list, uint32_t size, int qp, uint32_t scalingListId);
+  void xSetRecScalingListEnc(ScalingList *scalingList, uint32_t list, uint32_t sizew, uint32_t sizeh, int qp, uint32_t scalingListId);
+  void xSetRecScalingListDec(const ScalingList &scalingList, uint32_t list, uint32_t sizew, uint32_t sizeh, int qp, uint32_t scalingListId);
+private:
+  void xSignBitHidingHDQ  (TCoeff* pQCoef, const TCoeff* pCoef, TCoeff* deltaU, const CoeffCodingContext& cctx, const int maxLog2TrDynamicRange);
 
-  private:
-    void xSignBitHidingHDQ(TCoeff *pQCoef, const TCoeff *pCoef, TCoeff *deltaU, const CoeffCodingContext &cctx,
-                           const int maxLog2TrDynamicRange);
-
-  private:
+private:
 #if RDOQ_CHROMA_LAMBDA
-    double m_lambdas[MAX_NUM_COMPONENT];
+  double   m_lambdas[MAX_NUM_COMPONENT];
 #endif
-    double m_lambdasStore[2][MAX_NUM_COMPONENT];   // 0-org; 1-act
-    bool   m_resetStore;
-    bool   m_scalingListEnabledFlag;
-    bool   m_isScalingListOwner;
+  double   m_lambdasStore[2][MAX_NUM_COMPONENT];  // 0-org; 1-act
+  bool     m_resetStore;
+  bool     m_scalingListEnabledFlag;
+  bool     m_isScalingListOwner;
 
-    int *m_quantCoef[SCALING_LIST_SIZE_NUM][SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]
-                    [SCALING_LIST_REM_NUM];   ///< array of quantization matrix coefficient 4x4
-    int *m_dequantCoef[SCALING_LIST_SIZE_NUM][SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM]
-                      [SCALING_LIST_REM_NUM];   ///< array of dequantization matrix coefficient 4x4
+  int      *m_quantCoef            [SCALING_LIST_SIZE_NUM][SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of quantization matrix coefficient 4x4
+  int      *m_dequantCoef          [SCALING_LIST_SIZE_NUM][SCALING_LIST_SIZE_NUM][SCALING_LIST_NUM][SCALING_LIST_REM_NUM]; ///< array of dequantization matrix coefficient 4x4
 
-    int m_pairCheck;
-};   // END CLASS DEFINITION Quant
+  int      m_pairCheck;
+};// END CLASS DEFINITION Quant
+
 
 //! \}
 
-#endif   // __QUANT__
+#endif // __QUANT__

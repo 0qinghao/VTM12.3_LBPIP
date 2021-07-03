@@ -46,31 +46,26 @@
 
 class AffineGradientSearch
 {
-  public:
-    void (*m_HorizontalSobelFilter)(Pel *const pPred, const int predStride, int *const pDerivate,
-                                    const int derivateBufStride, const int width, const int height);
+public:
+  void( *m_HorizontalSobelFilter ) (Pel *const pPred, const int predStride, int *const pDerivate, const int derivateBufStride, const int width, const int height);
 
-    void (*m_VerticalSobelFilter)(Pel *const pPred, const int predStride, int *const pDerivate,
-                                  const int derivateBufStride, const int width, const int height);
+  void( *m_VerticalSobelFilter ) (Pel *const pPred, const int predStride, int *const pDerivate, const int derivateBufStride, const int width, const int height);
 
-    void (*m_EqualCoeffComputer)(Pel *pResidue, int residueStride, int **ppDerivate, int derivateBufStride,
-                                 int64_t (*pEqualCoeff)[7], int width, int height, bool b6Param);
+  void( *m_EqualCoeffComputer ) (Pel *pResidue, int residueStride, int **ppDerivate, int derivateBufStride, int64_t( *pEqualCoeff )[7], int width, int height, bool b6Param);
 
-    static void xHorizontalSobelFilter(Pel *const pPred, const int predStride, int *const pDerivate,
-                                       const int derivateBufStride, const int width, const int height);
+  static void xHorizontalSobelFilter( Pel *const pPred, const int predStride, int *const pDerivate, const int derivateBufStride, const int width, const int height );
 
-    static void xVerticalSobelFilter(Pel *const pPred, const int predStride, int *const pDerivate,
-                                     const int derivateBufStride, const int width, const int height);
+  static void xVerticalSobelFilter( Pel *const pPred, const int predStride, int *const pDerivate, const int derivateBufStride, const int width, const int height );
 
-    static void xEqualCoeffComputer(Pel *pResidue, int residueStride, int **ppDerivate, int derivateBufStride,
-                                    int64_t (*pEqualCoeff)[7], int width, int height, bool b6Param);
+  static void xEqualCoeffComputer( Pel *pResidue, int residueStride, int **ppDerivate, int derivateBufStride, int64_t( *pEqualCoeff )[7], int width, int height, bool b6Param );
 
-    AffineGradientSearch();
-    ~AffineGradientSearch() {}
+  AffineGradientSearch();
+  ~AffineGradientSearch() {}
 
 #ifdef TARGET_SIMD_X86
-    void                         initAffineGradientSearchX86();
-    template<X86_VEXT vext> void _initAffineGradientSearchX86();
+  void initAffineGradientSearchX86();
+  template <X86_VEXT vext>
+  void _initAffineGradientSearchX86();
 #endif
 };
 

@@ -42,26 +42,26 @@
 //! \ingroup EncoderLib
 //! \{
 
-uint32_t writeAnnexBNalUnit(std::ostream &out, const NALUnitEBSP &nalu, bool useLongStartcode)
+uint32_t writeAnnexBNalUnit(std::ostream& out, const NALUnitEBSP& nalu, bool useLongStartcode)
 {
-    uint32_t size = 0; /* size of annexB unit in bytes */
+  uint32_t size = 0; /* size of annexB unit in bytes */
 
-    static const uint8_t startCodePrefix[] = { 0, 0, 0, 1 };
+  static const uint8_t startCodePrefix[] = {0,0,0,1};
 
-    if (useLongStartcode)
-    {
-        out.write(reinterpret_cast<const char *>(startCodePrefix), 4);
-        size += 4;
-    }
-    else
-    {
-        out.write(reinterpret_cast<const char *>(startCodePrefix + 1), 3);
-        size += 3;
-    }
-    out << nalu.m_nalUnitData.str();
-    size += uint32_t(nalu.m_nalUnitData.str().size());
+  if (useLongStartcode)
+  {
+    out.write(reinterpret_cast<const char*>(startCodePrefix), 4);
+    size += 4;
+  }
+  else
+  {
+    out.write(reinterpret_cast<const char*>(startCodePrefix+1), 3);
+    size += 3;
+  }
+  out << nalu.m_nalUnitData.str();
+  size += uint32_t(nalu.m_nalUnitData.str().size());
 
-    return size;
+  return size;
 }
 
 /**
@@ -71,30 +71,27 @@ uint32_t writeAnnexBNalUnit(std::ostream &out, const NALUnitEBSP &nalu, bool use
  *  - the initial startcode in the access unit,
  *  - any SPS/PPS nal units
  */
-std::vector<uint32_t> writeAnnexBAccessUnit(std::ostream &out, const AccessUnit &au)
+std::vector<uint32_t> writeAnnexBAccessUnit(std::ostream& out, const AccessUnit& au)
 {
-    std::vector<uint32_t> annexBsizes;
+  std::vector<uint32_t> annexBsizes;
 
-    for (AccessUnit::const_iterator it = au.begin(); it != au.end(); it++)
-    {
-        const NALUnitEBSP &nalu = **it;
-        const bool         useLongStartCode =
-          (it == au.begin() || nalu.m_nalUnitType == NAL_UNIT_OPI || nalu.m_nalUnitType == NAL_UNIT_DCI
-           || nalu.m_nalUnitType == NAL_UNIT_VPS || nalu.m_nalUnitType == NAL_UNIT_SPS
-           || nalu.m_nalUnitType == NAL_UNIT_PPS || nalu.m_nalUnitType == NAL_UNIT_PREFIX_APS
-           || nalu.m_nalUnitType == NAL_UNIT_SUFFIX_APS);
+  for (AccessUnit::const_iterator it = au.begin(); it != au.end(); it++)
+  {
+    const NALUnitEBSP& nalu = **it;
+    const bool useLongStartCode = (it == au.begin() || nalu.m_nalUnitType == NAL_UNIT_OPI || nalu.m_nalUnitType == NAL_UNIT_DCI || nalu.m_nalUnitType == NAL_UNIT_VPS || nalu.m_nalUnitType == NAL_UNIT_SPS
+                                   || nalu.m_nalUnitType == NAL_UNIT_PPS || nalu.m_nalUnitType == NAL_UNIT_PREFIX_APS || nalu.m_nalUnitType == NAL_UNIT_SUFFIX_APS);
 
-        const uint32_t size = writeAnnexBNalUnit(out, nalu, useLongStartCode);
+    const uint32_t size = writeAnnexBNalUnit(out, nalu, useLongStartCode);
 
-        annexBsizes.push_back(size);
-    }
+    annexBsizes.push_back(size);
+  }
 
-    if (au.size() > 0)
-    {
-        out.flush();
-    }
+  if (au.size() > 0)
+  {
+    out.flush();
+  }
 
-    return annexBsizes;
+  return annexBsizes;
 }
 
 //! \}

@@ -38,6 +38,7 @@
 #ifndef __INTRAPREDICTION__
 #define __INTRAPREDICTION__
 
+
 // Include files
 #include "Unit.h"
 #include "Buffer.h"
@@ -55,37 +56,38 @@
 /// prediction class
 enum PredBuf
 {
-    PRED_BUF_UNFILTERED = 0,
-    PRED_BUF_FILTERED   = 1,
-    NUM_PRED_BUF        = 2
+  PRED_BUF_UNFILTERED = 0,
+  PRED_BUF_FILTERED   = 1,
+  NUM_PRED_BUF        = 2
 };
 
-static const uint32_t MAX_INTRA_FILTER_DEPTHS = 8;
+static const uint32_t MAX_INTRA_FILTER_DEPTHS=8;
 
 class IntraPrediction
 {
-  protected:
-    Pel      m_refBuffer[MAX_NUM_COMPONENT][NUM_PRED_BUF][(MAX_CU_SIZE * 2 + 1 + MAX_REF_LINE_IDX) * 2];
-    uint32_t m_refBufferStride[MAX_NUM_COMPONENT];
+protected:
+  Pel      m_refBuffer[MAX_NUM_COMPONENT][NUM_PRED_BUF][(MAX_CU_SIZE * 2 + 1 + MAX_REF_LINE_IDX) * 2];
+  uint32_t m_refBufferStride[MAX_NUM_COMPONENT];
 
-  private:
-    Pel *m_yuvExt2[MAX_NUM_COMPONENT][4];
-    int  m_yuvExtSize2;
+private:
 
-    static const uint8_t m_aucIntraFilter[MAX_INTRA_FILTER_DEPTHS];
+  Pel* m_yuvExt2[MAX_NUM_COMPONENT][4];
+  int  m_yuvExtSize2;
 
-    struct IntraPredParam   // parameters of Intra Prediction
-    {
-        bool refFilterFlag;
-        bool applyPDPC;
-        bool isModeVer;
-        int  multiRefIndex;
-        int  intraPredAngle;
-        int  absInvAngle;
-        bool interpolationFlag;
-        int  angularScale;
+  static const uint8_t m_aucIntraFilter[MAX_INTRA_FILTER_DEPTHS];
 
-        // clang-format off
+  struct IntraPredParam //parameters of Intra Prediction
+  {
+    bool refFilterFlag;
+    bool applyPDPC;
+    bool isModeVer;
+    int  multiRefIndex;
+    int  intraPredAngle;
+    int  absInvAngle;
+    bool interpolationFlag;
+    int  angularScale;
+
+    // clang-format off
     IntraPredParam()
       : refFilterFlag(false)
       , applyPDPC(false)
@@ -95,86 +97,80 @@ class IntraPrediction
       , absInvAngle(std::numeric_limits<int>::max())
       , interpolationFlag(false)
       , angularScale(-1)
-        // clang-format on
-        {
-        }
-    };
-
-    IntraPredParam m_ipaParam;
-
-    Pel *                 m_piTemp;
-    Pel *                 m_pMdlmTemp;   // for MDLM mode
-    MatrixIntraPrediction m_matrixIntraPred;
-
-  protected:
-    ChromaFormat m_currChromaFormat;
-
-    int          m_topRefLength;
-    int          m_leftRefLength;
-    ScanElement *m_scanOrder;
-    bool         m_bestScanRotationMode;
-    // prediction
-    void xPredIntraPlanar(const CPelBuf &pSrc, PelBuf &pDst);
-    void xPredIntraDc(const CPelBuf &pSrc, PelBuf &pDst, const ChannelType channelType,
-                      const bool enableBoundaryFilter = true);
-    void xPredIntraAng(const CPelBuf &pSrc, PelBuf &pDst, const ChannelType channelType, const ClpRng &clpRng);
-
-    void initPredIntraParams(const PredictionUnit &pu, const CompArea compArea, const SPS &sps);
-
-    static bool isIntegerSlope(const int absAng) { return (0 == (absAng & 0x1F)); }
-
-    void xPredIntraBDPCM(const CPelBuf &pSrc, PelBuf &pDst, const uint32_t dirMode, const ClpRng &clpRng);
-    Pel  xGetPredValDc(const CPelBuf &pSrc, const Size &dstSize);
-
-    void xFillReferenceSamples(const CPelBuf &recoBuf, Pel *refBufUnfiltered, const CompArea &area,
-                               const CodingUnit &cu);
-    void xFilterReferenceSamples(const Pel *refBufUnfiltered, Pel *refBufFiltered, const CompArea &area, const SPS &sps,
-                                 int multiRefIdx);
-
-    static int getModifiedWideAngle(int width, int height, int predMode);
-    void       setReferenceArrayLengths(const CompArea &area);
-
-    void destroy();
-
-    void xGetLMParameters(const PredictionUnit &pu, const ComponentID compID, const CompArea &chromaArea, int &a,
-                          int &b, int &iShift);
-
-  public:
-    IntraPrediction();
-    virtual ~IntraPrediction();
-
-    void init(ChromaFormat chromaFormatIDC, const unsigned bitDepthY);
-
-    // Angular Intra
-    void predIntraAng(const ComponentID compId, PelBuf &piPred, const PredictionUnit &pu);
-    Pel *getPredictorPtr(const ComponentID compId)
+    // clang-format on
     {
-        return m_refBuffer[compId][m_ipaParam.refFilterFlag ? PRED_BUF_FILTERED : PRED_BUF_UNFILTERED];
     }
+  };
 
-    // Cross-component Chroma
-    void predIntraChromaLM(const ComponentID compID, PelBuf &piPred, const PredictionUnit &pu,
-                           const CompArea &chromaArea, int intraDir);
-    void xGetLumaRecPixels(const PredictionUnit &pu, CompArea chromaArea);
-    /// set parameters from CU data for accessing intra data
-    void initIntraPatternChType(
-      const CodingUnit &cu, const CompArea &area,
-      const bool forceRefFilterFlag = false);   // use forceRefFilterFlag to get both filtered and unfiltered buffers
-    void initIntraPatternChTypeISP(
-      const CodingUnit &cu, const CompArea &area, PelBuf &piReco,
-      const bool forceRefFilterFlag = false);   // use forceRefFilterFlag to get both filtered and unfiltered buffers
+  IntraPredParam m_ipaParam;
 
-    // Matrix-based intra prediction
-    void initIntraMip(const PredictionUnit &pu, const CompArea &area);
-    void predIntraMip(const ComponentID compId, PelBuf &piPred, const PredictionUnit &pu);
+  Pel* m_piTemp;
+  Pel* m_pMdlmTemp; // for MDLM mode
+  MatrixIntraPrediction m_matrixIntraPred;
 
-    void geneWeightedPred(const ComponentID compId, PelBuf &pred, const PredictionUnit &pu, Pel *srcBuf);
-    Pel *getPredictorPtr2(const ComponentID compID, uint32_t idx) { return m_yuvExt2[compID][idx]; }
-    void switchBuffer(const PredictionUnit &pu, ComponentID compID, PelBuf srcBuff, Pel *dst);
-    void geneIntrainterPred(const CodingUnit &cu);
-    void reorderPLT(CodingStructure &cs, Partitioner &partitioner, ComponentID compBegin, uint32_t numComp);
+
+
+protected:
+  ChromaFormat  m_currChromaFormat;
+
+  int m_topRefLength;
+  int m_leftRefLength;
+  ScanElement* m_scanOrder;
+  bool         m_bestScanRotationMode;
+  // prediction
+  void xPredIntraPlanar           ( const CPelBuf &pSrc, PelBuf &pDst );
+  void xPredIntraDc               ( const CPelBuf &pSrc, PelBuf &pDst, const ChannelType channelType, const bool enableBoundaryFilter = true );
+  void xPredIntraAng              ( const CPelBuf &pSrc, PelBuf &pDst, const ChannelType channelType, const ClpRng& clpRng);
+
+  void initPredIntraParams        ( const PredictionUnit & pu,  const CompArea compArea, const SPS& sps );
+
+  static bool isIntegerSlope(const int absAng) { return (0 == (absAng & 0x1F)); }
+
+  void xPredIntraBDPCM            ( const CPelBuf &pSrc, PelBuf &pDst, const uint32_t dirMode, const ClpRng& clpRng );
+  Pel  xGetPredValDc              ( const CPelBuf &pSrc, const Size &dstSize );
+
+  void xFillReferenceSamples      ( const CPelBuf &recoBuf,      Pel* refBufUnfiltered, const CompArea &area, const CodingUnit &cu );
+  void xFilterReferenceSamples(const Pel *refBufUnfiltered, Pel *refBufFiltered, const CompArea &area, const SPS &sps,
+                               int multiRefIdx
+  );
+
+  static int getModifiedWideAngle         ( int width, int height, int predMode );
+  void setReferenceArrayLengths   ( const CompArea &area );
+
+  void destroy                    ();
+
+  void xGetLMParameters(const PredictionUnit &pu, const ComponentID compID, const CompArea& chromaArea, int& a, int& b, int& iShift);
+public:
+  IntraPrediction();
+  virtual ~IntraPrediction();
+
+  void init                       (ChromaFormat chromaFormatIDC, const unsigned bitDepthY);
+
+  // Angular Intra
+  void predIntraAng               ( const ComponentID compId, PelBuf &piPred, const PredictionUnit &pu);
+  Pel *getPredictorPtr(const ComponentID compId)
+  {
+    return m_refBuffer[compId][m_ipaParam.refFilterFlag ? PRED_BUF_FILTERED : PRED_BUF_UNFILTERED];
+  }
+
+  // Cross-component Chroma
+  void predIntraChromaLM(const ComponentID compID, PelBuf &piPred, const PredictionUnit &pu, const CompArea& chromaArea, int intraDir);
+  void xGetLumaRecPixels(const PredictionUnit &pu, CompArea chromaArea);
+  /// set parameters from CU data for accessing intra data
+  void initIntraPatternChType     (const CodingUnit &cu, const CompArea &area, const bool forceRefFilterFlag = false); // use forceRefFilterFlag to get both filtered and unfiltered buffers
+  void initIntraPatternChTypeISP  (const CodingUnit& cu, const CompArea& area, PelBuf& piReco, const bool forceRefFilterFlag = false); // use forceRefFilterFlag to get both filtered and unfiltered buffers
+
+  // Matrix-based intra prediction
+  void initIntraMip               (const PredictionUnit &pu, const CompArea &area);
+  void predIntraMip               (const ComponentID compId, PelBuf &piPred, const PredictionUnit &pu);
+
+  void geneWeightedPred           (const ComponentID compId, PelBuf &pred, const PredictionUnit &pu, Pel *srcBuf);
+  Pel* getPredictorPtr2           (const ComponentID compID, uint32_t idx) { return m_yuvExt2[compID][idx]; }
+  void switchBuffer               (const PredictionUnit &pu, ComponentID compID, PelBuf srcBuff, Pel *dst);
+  void geneIntrainterPred         (const CodingUnit &cu);
+  void reorderPLT                 (CodingStructure& cs, Partitioner& partitioner, ComponentID compBegin, uint32_t numComp);
 };
 
 //! \}
 
-#endif   // __INTRAPREDICTION__
+#endif // __INTRAPREDICTION__

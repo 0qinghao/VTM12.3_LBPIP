@@ -31,9 +31,9 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     StreamMergeAppCfg.cpp
-    \brief    Decoder configuration class
-*/
+ /** \file     StreamMergeAppCfg.cpp
+     \brief    Decoder configuration class
+ */
 
 #include <cstdio>
 #include <cstring>
@@ -54,28 +54,33 @@ namespace po = df::program_options_lite;
 /** \param argc number of arguments
     \param argv array of arguments
  */
-bool StreamMergeAppCfg::parseCfg(int argc, char *argv[])
+bool StreamMergeAppCfg::parseCfg(int argc, char* argv[])
 {
-    int i;
+  int i;
 
-    m_numInputStreams = argc - 2;
+  m_numInputStreams = argc - 2;
 
-    for (i = 0; i < m_numInputStreams; i++)
-    {
-        m_bitstreamFileNameIn[i] = argv[i + 1];
-    }
+  for (i = 0; i < m_numInputStreams; i++)
+  {
+    m_bitstreamFileNameIn[i] = argv[i + 1];
+  }
 
-    m_bitstreamFileNameOut = argv[i + 1];
+  m_bitstreamFileNameOut = argv[i + 1];
 
-    return true;
+  return true;
 }
 
-StreamMergeAppCfg::StreamMergeAppCfg() : m_bitstreamFileNameOut(), m_numInputStreams(0)
+StreamMergeAppCfg::StreamMergeAppCfg()
+  : m_bitstreamFileNameOut()
+  , m_numInputStreams(0)
 {
-    for (int i = 0; i < MAX_VPS_LAYERS; i++)
-        m_bitstreamFileNameIn[i] = "";
+  for (int i = 0; i < MAX_VPS_LAYERS; i++)
+    m_bitstreamFileNameIn[i] = "";
 }
 
-StreamMergeAppCfg::~StreamMergeAppCfg() {}
+StreamMergeAppCfg::~StreamMergeAppCfg()
+{
+
+}
 
 //! \}

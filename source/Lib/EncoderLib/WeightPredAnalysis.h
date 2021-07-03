@@ -41,26 +41,27 @@
 #include "../CommonLib/Slice.h"
 #include "VLCWriter.h"
 
-class WeightPredAnalysis
+class  WeightPredAnalysis
 {
-  private:
-    // member variables
-    WPScalingParam m_wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT];
+private:
 
-    // member functions
+  // member variables
+  WPScalingParam  m_wp[NUM_REF_PIC_LIST_01][MAX_NUM_REF][MAX_NUM_COMPONENT];
 
-    bool xSelectWP(Slice *const slice, const int log2Denom);
-    bool xSelectWPHistExtClip(Slice *const slice, const int log2Denom, const bool bDoEnhancement,
-                              const bool bClipInitialSADWP, const bool bUseHistogram);
-    bool xUpdatingWPParameters(Slice *const slice, const int log2Denom);
+  // member functions
 
-  public:
-    WeightPredAnalysis();
+  bool  xSelectWP            (Slice *const slice, const int log2Denom);
+  bool  xSelectWPHistExtClip (Slice *const slice, const int log2Denom, const bool bDoEnhancement, const bool bClipInitialSADWP, const bool bUseHistogram);
+  bool  xUpdatingWPParameters(Slice *const slice, const int log2Denom);
 
-    // WP analysis :
-    void xCalcACDCParamSlice(Slice *const slice);
-    void xEstimateWPParamSlice(Slice *const slice, const WeightedPredictionMethod method);
-    void xCheckWPEnable(Slice *const slice);
+public:
+
+  WeightPredAnalysis();
+
+  // WP analysis :
+  void  xCalcACDCParamSlice  (Slice *const slice);
+  void  xEstimateWPParamSlice(Slice *const slice, const WeightedPredictionMethod method);
+  void  xCheckWPEnable       (Slice *const slice);
 };
 
-#endif   // __WEIGHTPREDANALYSIS__
+#endif // __WEIGHTPREDANALYSIS__

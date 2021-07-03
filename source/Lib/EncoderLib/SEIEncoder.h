@@ -43,57 +43,60 @@ class EncCfg;
 class EncLib;
 class EncGOP;
 
+
 //! Initializes different SEI message types based on given encoder configuration parameters
 class SEIEncoder
 {
-  public:
-    SEIEncoder() : m_pcCfg(NULL), m_pcEncLib(NULL), m_pcEncGOP(NULL), m_isInitialized(false){};
-    virtual ~SEIEncoder(){};
+public:
+  SEIEncoder()
+    :m_pcCfg(NULL)
+    ,m_pcEncLib(NULL)
+    ,m_pcEncGOP(NULL)
+  ,m_isInitialized(false)
+  {};
+  virtual ~SEIEncoder(){};
 
-    void init(EncCfg *encCfg, EncLib *encTop, EncGOP *encGOP)
-    {
-        m_pcCfg         = encCfg;
-        m_pcEncGOP      = encGOP;
-        m_pcEncLib      = encTop;
-        m_isInitialized = true;
-    };
+  void init(EncCfg* encCfg, EncLib *encTop, EncGOP *encGOP)
+  {
+    m_pcCfg = encCfg;
+    m_pcEncGOP = encGOP;
+    m_pcEncLib = encTop;
+    m_isInitialized = true;
+  };
 
-    // leading SEIs
-    void initSEIFramePacking(SEIFramePacking *sei, int currPicNum);
-    void initSEIParameterSetsInclusionIndication(SEIParameterSetsInclusionIndication *sei);
-    void initSEIDependentRAPIndication(SEIDependentRAPIndication *sei);
-    void initSEIBufferingPeriod(SEIBufferingPeriod *sei, bool noLeadingPictures);
+  // leading SEIs
+  void initSEIFramePacking(SEIFramePacking *sei, int currPicNum);
+  void initSEIParameterSetsInclusionIndication(SEIParameterSetsInclusionIndication* sei);
+  void initSEIDependentRAPIndication(SEIDependentRAPIndication *sei);
+  void initSEIBufferingPeriod(SEIBufferingPeriod *sei, bool noLeadingPictures);
 #if U0033_ALTERNATIVE_TRANSFER_CHARACTERISTICS_SEI
-    void initSEIAlternativeTransferCharacteristics(SEIAlternativeTransferCharacteristics *sei);
+  void initSEIAlternativeTransferCharacteristics(SEIAlternativeTransferCharacteristics *sei);
 #endif
-    void initSEIScalableNesting(SEIScalableNesting *scalableNestingSEI, SEIMessages &nestedSEIs,
-                                const std::vector<int> &targetOLSs, const std::vector<int> &targetLayers,
-                                const std::vector<uint16_t> &subpictureIDs, uint16_t maxSubpicIdInPic);
-    void initDecodedPictureHashSEI(SEIDecodedPictureHash *sei, PelUnitBuf &pic, std::string &rHashString,
-                                   const BitDepths &bitDepths);
-    void initSEIErp(SEIEquirectangularProjection *sei);
-    void initSEISphereRotation(SEISphereRotation *sei);
-    void initSEIOmniViewport(SEIOmniViewport *sei);
-    void initSEIRegionWisePacking(SEIRegionWisePacking *sei);
-    void initSEIGcmp(SEIGeneralizedCubemapProjection *sei);
-    void initSEISubpictureLevelInfo(SEISubpicureLevelInfo *sei, const SPS *sps);
-    void initSEISampleAspectRatioInfo(SEISampleAspectRatioInfo *sei);
-    void initSEIFilmGrainCharacteristics(SEIFilmGrainCharacteristics *sei);
-    void initSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourVolume *sei);
-    void initSEIContentLightLevel(SEIContentLightLevelInfo *sei);
-    void initSEIAmbientViewingEnvironment(SEIAmbientViewingEnvironment *sei);
-    void initSEIContentColourVolume(SEIContentColourVolume *sei);
-    bool initSEIAnnotatedRegions(SEIAnnotatedRegions *sei, int currPOC);
-    void readAnnotatedRegionSEI(std::istream &fic, SEIAnnotatedRegions *seiAnnoRegion, bool &failed);
+  void initSEIScalableNesting(SEIScalableNesting *scalableNestingSEI, SEIMessages &nestedSEIs, const std::vector<int> &targetOLSs, const std::vector<int> &targetLayers, const std::vector<uint16_t> &subpictureIDs, uint16_t maxSubpicIdInPic);
+  void initDecodedPictureHashSEI(SEIDecodedPictureHash *sei, PelUnitBuf& pic, std::string &rHashString, const BitDepths &bitDepths);
+  void initSEIErp(SEIEquirectangularProjection *sei);
+  void initSEISphereRotation(SEISphereRotation *sei);
+  void initSEIOmniViewport(SEIOmniViewport *sei);
+  void initSEIRegionWisePacking(SEIRegionWisePacking *sei);
+  void initSEIGcmp(SEIGeneralizedCubemapProjection *sei);
+  void initSEISubpictureLevelInfo(SEISubpicureLevelInfo *sei, const SPS *sps);
+  void initSEISampleAspectRatioInfo(SEISampleAspectRatioInfo *sei);
+  void initSEIFilmGrainCharacteristics(SEIFilmGrainCharacteristics *sei);
+  void initSEIMasteringDisplayColourVolume(SEIMasteringDisplayColourVolume *sei);
+  void initSEIContentLightLevel(SEIContentLightLevelInfo *sei);
+  void initSEIAmbientViewingEnvironment(SEIAmbientViewingEnvironment *sei);
+  void initSEIContentColourVolume(SEIContentColourVolume *sei);
+  bool initSEIAnnotatedRegions(SEIAnnotatedRegions *sei, int currPOC);
+  void readAnnotatedRegionSEI(std::istream &fic, SEIAnnotatedRegions *seiAnnoRegion, bool &failed);
+private:
+  EncCfg* m_pcCfg;
+  EncLib* m_pcEncLib;
+  EncGOP* m_pcEncGOP;
 
-  private:
-    EncCfg *m_pcCfg;
-    EncLib *m_pcEncLib;
-    EncGOP *m_pcEncGOP;
-
-    bool m_isInitialized;
+  bool m_isInitialized;
 };
+
 
 //! \}
 
-#endif   // __SEIENCODER__
+#endif // __SEIENCODER__

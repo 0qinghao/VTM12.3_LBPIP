@@ -31,12 +31,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #ifndef __BITSTREAMEXTRACTORAPPCFG__
 #define __BITSTREAMEXTRACTORAPPCFG__
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CommonLib/CommonDef.h"
 #include <vector>
@@ -44,18 +45,21 @@
 // Bitstream Extractor configuration class
 class BitstreamExtractorAppCfg
 {
-  protected:
-    std::string m_bitstreamFileNameIn;    //  output bitstream file name
-    std::string m_bitstreamFileNameOut;   //  input bitstream file name
-    int         m_maxTemporalLayer;
-    int         m_targetOlsIdx;
-    int         m_subPicIdx;
+protected:
+  std::string   m_bitstreamFileNameIn;                //  output bitstream file name
+  std::string   m_bitstreamFileNameOut;               //  input bitstream file name
+  int           m_maxTemporalLayer;
+  int           m_targetOlsIdx;
+  int           m_subPicIdx;
 
-  public:
-    BitstreamExtractorAppCfg();
-    virtual ~BitstreamExtractorAppCfg();
+public:
+  BitstreamExtractorAppCfg();
+  virtual ~BitstreamExtractorAppCfg();
 
-    bool parseCfg(int argc, char *argv[]);   //  initialize option class from configuration
+  bool  parseCfg        ( int argc, char* argv[] );   //  initialize option class from configuration
 };
 
-#endif   // __BITSTREAMEXTRACTORAPPCFG__
+
+#endif  // __BITSTREAMEXTRACTORAPPCFG__
+
+

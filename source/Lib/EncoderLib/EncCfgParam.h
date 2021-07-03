@@ -32,51 +32,54 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #ifndef __ENCCFGPARAMS__
 #define __ENCCFGPARAMS__
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CommonLib/CommonDef.h"
 
-namespace EncCfgParam
+namespace EncCfgParam {
+
+class CfgVPSParameters
 {
-    class CfgVPSParameters
-    {
-      public:
-        CfgVPSParameters() {}
+public:
+  CfgVPSParameters()
+  {}
 
-        virtual ~CfgVPSParameters() {}
+  virtual ~CfgVPSParameters(){}
 
-        std::vector<std::vector<uint32_t>> m_maxTidILRefPicsPlus1;
-    };
+  std::vector<std::vector<uint32_t>> m_maxTidILRefPicsPlus1;
+};
 
-    class CfgSEISubpictureLevel
-    {
-      public:
-        CfgSEISubpictureLevel()
-          : m_enabled(false)
-          , m_explicitFraction(false)
-          , m_numSubpictures(1)
-          , m_sliMaxSublayers(1)
-          , m_sliSublayerInfoPresentFlag(false)
-        {
-        }
+class CfgSEISubpictureLevel
+{
+public:
 
-        virtual ~CfgSEISubpictureLevel() {}
+  CfgSEISubpictureLevel()
+  : m_enabled (false)
+  , m_explicitFraction (false)
+  , m_numSubpictures (1)
+  , m_sliMaxSublayers(1)
+  , m_sliSublayerInfoPresentFlag (false)
+  {}
 
-        bool                     m_enabled;
-        std::vector<Level::Name> m_refLevels;
-        bool                     m_explicitFraction;
-        int                      m_numSubpictures;
-        std::vector<int>         m_nonSubpicLayersFraction;
-        std::vector<int>         m_fractions;
-        int                      m_sliMaxSublayers;
-        bool                     m_sliSublayerInfoPresentFlag;
-    };
+  virtual ~CfgSEISubpictureLevel(){}
 
-}   // namespace EncCfgParam
+  bool                      m_enabled;
+  std::vector<Level::Name>  m_refLevels;
+  bool                      m_explicitFraction;
+  int                       m_numSubpictures;
+  std::vector<int>          m_nonSubpicLayersFraction;
+  std::vector<int>          m_fractions;
+  int                       m_sliMaxSublayers;
+  bool                      m_sliSublayerInfoPresentFlag;
+};
 
-#endif   // __ENCCFGPARAMS__
+}
+
+
+#endif // __ENCCFGPARAMS__

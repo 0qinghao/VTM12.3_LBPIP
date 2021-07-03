@@ -51,33 +51,37 @@
  */
 struct OutputNALUnit : public NALUnit
 {
-    /**
-     * construct an OutputNALunit structure with given header values and
-     * storage for a bitstream.  Upon construction the NALunit header is
-     * written to the bitstream.
-     */
-    OutputNALUnit(NalUnitType nalUnitType, uint32_t layerId = 0, uint32_t temporalID = 0,
-                  uint32_t reserved_zero_6bits = 0)
-      : NALUnit(nalUnitType, temporalID, reserved_zero_6bits, 0, layerId), m_Bitstream()
-    {
-    }
+  /**
+   * construct an OutputNALunit structure with given header values and
+   * storage for a bitstream.  Upon construction the NALunit header is
+   * written to the bitstream.
+   */
+  OutputNALUnit(
+    NalUnitType nalUnitType,
+    uint32_t layerId = 0,
+    uint32_t temporalID = 0,
+    uint32_t reserved_zero_6bits = 0)
+  : NALUnit( nalUnitType, temporalID, reserved_zero_6bits, 0, layerId )
+  , m_Bitstream()
+  {}
 
-    OutputNALUnit &operator=(const NALUnit &src)
-    {
-        m_Bitstream.clear();
-        static_cast<NALUnit *>(this)->operator=(src);
-        return *this;
-    }
+  OutputNALUnit& operator=(const NALUnit& src)
+  {
+    m_Bitstream.clear();
+    static_cast<NALUnit*>(this)->operator=(src);
+    return *this;
+  }
 
-    OutputBitstream m_Bitstream;
+  OutputBitstream m_Bitstream;
 };
 
-void writeNaluWithHeader(std::ostream &out, OutputNALUnit &nalu);
-void writeNaluContent(std::ostream &out, OutputNALUnit &nalu);
+void writeNaluWithHeader(std::ostream& out, OutputNALUnit& nalu);
+void writeNaluContent(std::ostream& out, OutputNALUnit& nalu);
 
-inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit &nalu) : NALUnit(nalu)
+inline NALUnitEBSP::NALUnitEBSP(OutputNALUnit& nalu)
+  : NALUnit(nalu)
 {
-    writeNaluWithHeader(m_nalUnitData, nalu);
+  writeNaluWithHeader(m_nalUnitData, nalu);
 }
 
 //! \}

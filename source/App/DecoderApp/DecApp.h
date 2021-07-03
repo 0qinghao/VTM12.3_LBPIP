@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "Utilities/VideoIOYuv.h"
 #include "CommonLib/Picture.h"
@@ -57,57 +57,51 @@
 /// decoder application class
 class DecApp : public DecAppCfg
 {
-  private:
-    // class interface
-    DecLib                              m_cDecLib;                ///< decoder class
-    std::unordered_map<int, VideoIOYuv> m_cVideoIOYuvReconFile;   ///< reconstruction YUV class
+private:
+  // class interface
+  DecLib          m_cDecLib;                     ///< decoder class
+  std::unordered_map<int, VideoIOYuv>      m_cVideoIOYuvReconFile;        ///< reconstruction YUV class
 
-    // for output control
-    int           m_iPOCLastDisplay;        ///< last POC in display order
-    std::ofstream m_seiMessageFileStream;   ///< Used for outputing SEI messages.
+  // for output control
+  int             m_iPOCLastDisplay;              ///< last POC in display order
+  std::ofstream   m_seiMessageFileStream;         ///< Used for outputing SEI messages.
 
-    std::ofstream m_oplFileStream;   ///< Used to output log file for confomance testing
+  std::ofstream   m_oplFileStream;                ///< Used to output log file for confomance testing
 
-    bool m_newCLVS[MAX_NUM_LAYER_IDS];   ///< used to record a new CLVSS
+  bool            m_newCLVS[MAX_NUM_LAYER_IDS];   ///< used to record a new CLVSS
 
-    SEIAnnotatedRegions::AnnotatedRegionHeader                     m_arHeader;    ///< AR header
-    std::map<uint32_t, SEIAnnotatedRegions::AnnotatedRegionObject> m_arObjects;   ///< AR object pool
-    std::map<uint32_t, std::string>                                m_arLabels;    ///< AR label pool
+  SEIAnnotatedRegions::AnnotatedRegionHeader                 m_arHeader; ///< AR header
+  std::map<uint32_t, SEIAnnotatedRegions::AnnotatedRegionObject> m_arObjects; ///< AR object pool
+  std::map<uint32_t, std::string>                                m_arLabels; ///< AR label pool
 
-  private:
-    bool xIsNaluWithinTargetDecLayerIdSet(
-      const InputNALUnit *nalu) const;   ///< check whether given Nalu is within targetDecLayerIdSet
-    bool xIsNaluWithinTargetOutputLayerIdSet(
-      const InputNALUnit *nalu) const;   ///< check whether given Nalu is within targetOutputLayerIdSet
+private:
+  bool  xIsNaluWithinTargetDecLayerIdSet( const InputNALUnit* nalu ) const; ///< check whether given Nalu is within targetDecLayerIdSet
+  bool  xIsNaluWithinTargetOutputLayerIdSet( const InputNALUnit* nalu ) const; ///< check whether given Nalu is within targetOutputLayerIdSet
 
-  public:
-    DecApp();
-    virtual ~DecApp() {}
+public:
+  DecApp();
+  virtual ~DecApp         ()  {}
 
-    uint32_t decode();   ///< main decoding function
+  uint32_t  decode            (); ///< main decoding function
 
-  private:
-    void xCreateDecLib();                                  ///< create internal classes
-    void xDestroyDecLib();                                 ///< destroy internal classes
-    void xWriteOutput(PicList *pcListPic, uint32_t tId);   ///< write YUV to file
+private:
+  void  xCreateDecLib     (); ///< create internal classes
+  void  xDestroyDecLib    (); ///< destroy internal classes
+  void  xWriteOutput      ( PicList* pcListPic , uint32_t tId); ///< write YUV to file
 #if JVET_S0078_NOOUTPUTPRIORPICFLAG
-    void xFlushOutput(PicList *pcListPic, const int layerId = NOT_VALID,
-                      bool noOutputOfPriorPicsFlag = false);   ///< flush all remaining decoded pictures to file
+  void  xFlushOutput( PicList *pcListPic, const int layerId = NOT_VALID, bool noOutputOfPriorPicsFlag = false );   ///< flush all remaining decoded pictures to file
 #else
-    void xFlushOutput(PicList * pcListPic,
-                      const int layerId = NOT_VALID);   ///< flush all remaining decoded pictures to file
+  void  xFlushOutput( PicList* pcListPic, const int layerId = NOT_VALID ); ///< flush all remaining decoded pictures to file
 #endif
-    bool isNewPicture(
-      ifstream *             bitstreamFile,
-      class InputByteStream *bytestream);   ///< check if next NAL unit will be the first NAL unit from a new picture
-    bool isNewAccessUnit(bool newPicture, ifstream *bitstreamFile,
-                         class InputByteStream
-                           *bytestream);   ///< check if next NAL unit will be the first NAL unit from a new access unit
+  bool  isNewPicture(ifstream *bitstreamFile, class InputByteStream *bytestream);  ///< check if next NAL unit will be the first NAL unit from a new picture
+  bool  isNewAccessUnit(bool newPicture, ifstream *bitstreamFile, class InputByteStream *bytestream);  ///< check if next NAL unit will be the first NAL unit from a new access unit
 
-    void writeLineToOutputLog(Picture *pcPic);
-    void xOutputAnnotatedRegions(PicList *pcListPic);
+  void  writeLineToOutputLog(Picture * pcPic);
+  void xOutputAnnotatedRegions(PicList* pcListPic);
+
 };
 
 //! \}
 
-#endif   // __DECAPP__
+#endif // __DECAPP__
+

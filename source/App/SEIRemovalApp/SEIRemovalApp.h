@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include <stdio.h>
 #include <fstream>
@@ -58,11 +58,13 @@ using namespace std;
 /// decoder application class
 class SEIRemovalApp : public SEIRemovalAppCfg
 {
-  public:
-    SEIRemovalApp();
-    virtual ~SEIRemovalApp() {}
 
-    uint32_t decode();   ///< main decoding function
+public:
+  SEIRemovalApp();
+  virtual ~SEIRemovalApp         ()  {}
+
+  uint32_t  decode            (); ///< main decoding function
 };
 
-#endif   // __SEIREMOVALAPP__
+#endif // __SEIREMOVALAPP__
+

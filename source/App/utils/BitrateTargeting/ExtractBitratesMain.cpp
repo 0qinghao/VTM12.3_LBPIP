@@ -39,61 +39,61 @@
 /// \pre toFind must have a size of 2
 /// \pre The first character in toFind muts be 'e'
 /// \pre out must contain toFind
-void replaceWithE(std::string &out, const std::string &toFind)
+void replaceWithE( std::string &out, const std::string& toFind )
 {
-    assert(2 == toFind.size());
-    assert('e' == toFind[0]);
+  assert( 2 == toFind.size( ) );
+  assert( 'e' == toFind[ 0 ] );
 
-    std::string::size_type pos(out.find(toFind));
-    assert(pos != std::string::npos);
-    out.erase(pos + 1, 1);
+  std::string::size_type pos( out.find( toFind ) );
+  assert( pos != std::string::npos );
+  out.erase( pos + 1, 1 );
 }
 
 /// Formatted output for a double with appropriate formatting applied (correct number of digits, etc.)
-void outputDouble(std::ostream &left, double right)
+void outputDouble( std::ostream& left, double right )
 {
-    std::ostringstream oss;
-    oss.precision(6);
-    oss << std::scientific << right;
-    std::string s(oss.str());
+  std::ostringstream oss;
+  oss.precision( 6 );
+  oss << std::scientific << right;
+  std::string s( oss.str( ) );
 
-    replaceWithE(s, "e+");
-    replaceWithE(s, "e0");
+  replaceWithE( s, "e+" );
+  replaceWithE( s, "e0" );
 
-    left << s;
+  left << s;
 }
 
-int main(int, char **)
+int main( int, char** )
 {
-    try
-    {
-        std::vector<double> result(extractBitratesForTemporalLayers(std::cin));   // Extract the bitrate vector
+  try
+  {
+    std::vector< double > result( extractBitratesForTemporalLayers( std::cin ) );  // Extract the bitrate vector
 
-        // Output the bitrate vector
-        if (0 < result.size())
+    // Output the bitrate vector
+    if( 0 < result.size( ) )
+    {
+      std::vector< double >::const_iterator iter( result.begin( ) );
+      outputDouble( std::cout, *iter );
+      for( ; ; )
+      {
+        ++iter;
+        if( result.end( ) == iter )
         {
-            std::vector<double>::const_iterator iter(result.begin());
-            outputDouble(std::cout, *iter);
-            for (;;)
-            {
-                ++iter;
-                if (result.end() == iter)
-                {
-                    break;
-                }
-                else
-                {
-                    std::cout << " ";
-                    outputDouble(std::cout, *iter);
-                }
-            }
+          break;
         }
+        else
+        {
+          std::cout << " ";
+          outputDouble( std::cout, *iter );
+        }
+      }
+    }
 
-        return 0;
-    }
-    catch (std::exception &e)
-    {
-        std::cerr << e.what() << std::endl;
-        return 1;
-    }
+    return 0;
+  }
+  catch( std::exception& e )
+  {
+    std::cerr << e.what( ) << std::endl;
+    return 1;
+  }
 }

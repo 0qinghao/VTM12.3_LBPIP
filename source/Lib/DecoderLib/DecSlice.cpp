@@ -48,243 +48,251 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-DecSlice::DecSlice() {}
-
-DecSlice::~DecSlice() {}
-
-void DecSlice::create() {}
-
-void DecSlice::destroy() {}
-
-void DecSlice::init(CABACDecoder *cabacDecoder, DecCu *pcCuDecoder)
+DecSlice::DecSlice()
 {
-    m_CABACDecoder = cabacDecoder;
-    m_pcCuDecoder  = pcCuDecoder;
 }
 
-void DecSlice::decompressSlice(Slice *slice, InputBitstream *bitstream, int debugCTU)
+DecSlice::~DecSlice()
 {
-    //-- For time output for each slice
-    slice->startProcessingTimer();
+}
 
-    const SPS *  sps         = slice->getSPS();
-    Picture *    pic         = slice->getPic();
-    CABACReader &cabacReader = *m_CABACDecoder->getCABACReader(0);
+void DecSlice::create()
+{
+}
 
-    // setup coding structure
-    CodingStructure &cs = *pic->cs;
-    cs.slice            = slice;
-    cs.sps              = sps;
-    cs.pps              = slice->getPPS();
-    memcpy(cs.alfApss, slice->getAlfAPSs(), sizeof(cs.alfApss));
+void DecSlice::destroy()
+{
+}
 
-    cs.lmcsAps        = slice->getPicHeader()->getLmcsAPS();
-    cs.scalinglistAps = slice->getPicHeader()->getScalingListAPS();
+void DecSlice::init( CABACDecoder* cabacDecoder, DecCu* pcCuDecoder )
+{
+  m_CABACDecoder    = cabacDecoder;
+  m_pcCuDecoder     = pcCuDecoder;
+}
 
-    cs.pcv         = slice->getPPS()->pcv;
-    cs.chromaQpAdj = 0;
+void DecSlice::decompressSlice( Slice* slice, InputBitstream* bitstream, int debugCTU )
+{
+  //-- For time output for each slice
+  slice->startProcessingTimer();
 
-    cs.picture->resizeSAO(cs.pcv->sizeInCtus, 0);
+  const SPS*     sps          = slice->getSPS();
+  Picture*       pic          = slice->getPic();
+  CABACReader&   cabacReader  = *m_CABACDecoder->getCABACReader( 0 );
 
-    cs.resetPrevPLT(cs.prevPLT);
+  // setup coding structure
+  CodingStructure& cs = *pic->cs;
+  cs.slice            = slice;
+  cs.sps              = sps;
+  cs.pps              = slice->getPPS();
+  memcpy(cs.alfApss, slice->getAlfAPSs(), sizeof(cs.alfApss));
 
-    if (slice->getFirstCtuRsAddrInSlice() == 0)
-    {
-        cs.picture->resizeAlfCtuEnableFlag(cs.pcv->sizeInCtus);
-        cs.picture->resizeAlfCtbFilterIndex(cs.pcv->sizeInCtus);
-        cs.picture->resizeAlfCtuAlternative(cs.pcv->sizeInCtus);
-    }
+  cs.lmcsAps          = slice->getPicHeader()->getLmcsAPS();
+  cs.scalinglistAps   = slice->getPicHeader()->getScalingListAPS();
 
-    const unsigned numSubstreams = slice->getNumberOfSubstreamSizes() + 1;
+  cs.pcv              = slice->getPPS()->pcv;
+  cs.chromaQpAdj      = 0;
 
-    // init each couple {EntropyDecoder, Substream}
-    // Table of extracted substreams.
-    std::vector<InputBitstream *> ppcSubstreams(numSubstreams);
-    for (unsigned idx = 0; idx < numSubstreams; idx++)
-    {
-        ppcSubstreams[idx] = bitstream->extractSubstream(idx + 1 < numSubstreams ? (slice->getSubstreamSize(idx) << 3)
-                                                                                 : bitstream->getNumBitsLeft());
-    }
+  cs.picture->resizeSAO(cs.pcv->sizeInCtus, 0);
 
-    const unsigned widthInCtus       = cs.pcv->widthInCtus;
-    const bool     wavefrontsEnabled = cs.sps->getEntropyCodingSyncEnabledFlag();
-    const bool     entryPointPresent = cs.sps->getEntryPointsPresentFlag();
+  cs.resetPrevPLT(cs.prevPLT);
 
-    cabacReader.initBitstream(ppcSubstreams[0]);
-    cabacReader.initCtxModels(*slice);
+  if (slice->getFirstCtuRsAddrInSlice() == 0)
+  {
+    cs.picture->resizeAlfCtuEnableFlag( cs.pcv->sizeInCtus );
+    cs.picture->resizeAlfCtbFilterIndex(cs.pcv->sizeInCtus);
+    cs.picture->resizeAlfCtuAlternative( cs.pcv->sizeInCtus );
+  }
 
-    // Quantization parameter
+  const unsigned numSubstreams = slice->getNumberOfSubstreamSizes() + 1;
+
+  // init each couple {EntropyDecoder, Substream}
+  // Table of extracted substreams.
+  std::vector<InputBitstream*> ppcSubstreams( numSubstreams );
+  for( unsigned idx = 0; idx < numSubstreams; idx++ )
+  {
+    ppcSubstreams[idx] = bitstream->extractSubstream( idx+1 < numSubstreams ? ( slice->getSubstreamSize(idx) << 3 ) : bitstream->getNumBitsLeft() );
+  }
+
+  const unsigned  widthInCtus             = cs.pcv->widthInCtus;
+  const bool     wavefrontsEnabled           = cs.sps->getEntropyCodingSyncEnabledFlag();
+  const bool     entryPointPresent           = cs.sps->getEntryPointsPresentFlag();
+
+  cabacReader.initBitstream( ppcSubstreams[0] );
+  cabacReader.initCtxModels( *slice );
+
+  // Quantization parameter
     pic->m_prevQP[0] = pic->m_prevQP[1] = slice->getSliceQp();
-    CHECK(pic->m_prevQP[0] == std::numeric_limits<int>::max(), "Invalid previous QP");
+  CHECK( pic->m_prevQP[0] == std::numeric_limits<int>::max(), "Invalid previous QP" );
 
-    DTRACE(g_trace_ctx, D_HEADER, "=========== POC: %d ===========\n", slice->getPOC());
+  DTRACE( g_trace_ctx, D_HEADER, "=========== POC: %d ===========\n", slice->getPOC() );
 
-    if (slice->getSliceType() != I_SLICE && slice->getRefPic(REF_PIC_LIST_0, 0)->subPictures.size() > 1)
+
+  if( slice->getSliceType() != I_SLICE && slice->getRefPic( REF_PIC_LIST_0, 0 )->subPictures.size() > 1 )
+  {
+    clipMv = clipMvInSubpic;
+  }
+  else
+  {
+    clipMv = clipMvInPic;
+  }
+  // for every CTU in the slice segment...
+  unsigned subStrmId = 0;
+  for( unsigned ctuIdx = 0; ctuIdx < slice->getNumCtuInSlice(); ctuIdx++ )
+  {
+    const unsigned  ctuRsAddr       = slice->getCtuAddrInSlice(ctuIdx);
+    const unsigned  ctuXPosInCtus   = ctuRsAddr % widthInCtus;
+    const unsigned  ctuYPosInCtus   = ctuRsAddr / widthInCtus;
+    const unsigned  tileColIdx      = slice->getPPS()->ctuToTileCol( ctuXPosInCtus );
+    const unsigned  tileRowIdx      = slice->getPPS()->ctuToTileRow( ctuYPosInCtus );
+    const unsigned  tileXPosInCtus  = slice->getPPS()->getTileColumnBd( tileColIdx );
+    const unsigned  tileYPosInCtus  = slice->getPPS()->getTileRowBd( tileRowIdx );
+    const unsigned  tileColWidth    = slice->getPPS()->getTileColumnWidth( tileColIdx );
+    const unsigned  tileRowHeight   = slice->getPPS()->getTileRowHeight( tileRowIdx );
+    const unsigned  tileIdx         = slice->getPPS()->getTileIdx( ctuXPosInCtus, ctuYPosInCtus);
+    const unsigned  maxCUSize             = sps->getMaxCUWidth();
+    Position pos( ctuXPosInCtus*maxCUSize, ctuYPosInCtus*maxCUSize) ;
+    UnitArea ctuArea(cs.area.chromaFormat, Area( pos.x, pos.y, maxCUSize, maxCUSize ) );
+    const SubPic &curSubPic = slice->getPPS()->getSubPicFromPos(pos);
+    // padding/restore at slice level
+    if (slice->getPPS()->getNumSubPics()>=2 && curSubPic.getTreatedAsPicFlag() && ctuIdx==0)
     {
-        clipMv = clipMvInSubpic;
+      int subPicX      = (int)curSubPic.getSubPicLeft();
+      int subPicY      = (int)curSubPic.getSubPicTop();
+      int subPicWidth  = (int)curSubPic.getSubPicWidthInLumaSample();
+      int subPicHeight = (int)curSubPic.getSubPicHeightInLumaSample();
+      for (int rlist = REF_PIC_LIST_0; rlist < NUM_REF_PIC_LIST_01; rlist++)
+      {
+        int n = slice->getNumRefIdx((RefPicList)rlist);
+        for (int idx = 0; idx < n; idx++)
+        {
+          Picture *refPic = slice->getRefPic((RefPicList)rlist, idx);
+
+          if( !refPic->getSubPicSaved() && refPic->subPictures.size() > 1 )
+          {
+            refPic->saveSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
+            refPic->extendSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
+            refPic->setSubPicSaved(true);
+          }
+        }
+      }
     }
-    else
+
+    DTRACE_UPDATE( g_trace_ctx, std::make_pair( "ctu", ctuRsAddr ) );
+
+    cabacReader.initBitstream( ppcSubstreams[subStrmId] );
+
+    // set up CABAC contexts' state for this CTU
+    if( ctuXPosInCtus == tileXPosInCtus && ctuYPosInCtus == tileYPosInCtus )
     {
-        clipMv = clipMvInPic;
+      if( ctuIdx != 0 ) // if it is the first CTU, then the entropy coder has already been reset
+      {
+        cabacReader.initCtxModels( *slice );
+        cs.resetPrevPLT(cs.prevPLT);
+      }
+      pic->m_prevQP[0] = pic->m_prevQP[1] = slice->getSliceQp();
     }
-    // for every CTU in the slice segment...
-    unsigned subStrmId = 0;
-    for (unsigned ctuIdx = 0; ctuIdx < slice->getNumCtuInSlice(); ctuIdx++)
+    else if( ctuXPosInCtus == tileXPosInCtus && wavefrontsEnabled )
     {
-        const unsigned ctuRsAddr      = slice->getCtuAddrInSlice(ctuIdx);
-        const unsigned ctuXPosInCtus  = ctuRsAddr % widthInCtus;
-        const unsigned ctuYPosInCtus  = ctuRsAddr / widthInCtus;
-        const unsigned tileColIdx     = slice->getPPS()->ctuToTileCol(ctuXPosInCtus);
-        const unsigned tileRowIdx     = slice->getPPS()->ctuToTileRow(ctuYPosInCtus);
-        const unsigned tileXPosInCtus = slice->getPPS()->getTileColumnBd(tileColIdx);
-        const unsigned tileYPosInCtus = slice->getPPS()->getTileRowBd(tileRowIdx);
-        const unsigned tileColWidth   = slice->getPPS()->getTileColumnWidth(tileColIdx);
-        const unsigned tileRowHeight  = slice->getPPS()->getTileRowHeight(tileRowIdx);
-        const unsigned tileIdx        = slice->getPPS()->getTileIdx(ctuXPosInCtus, ctuYPosInCtus);
-        const unsigned maxCUSize      = sps->getMaxCUWidth();
-        Position       pos(ctuXPosInCtus * maxCUSize, ctuYPosInCtus * maxCUSize);
-        UnitArea       ctuArea(cs.area.chromaFormat, Area(pos.x, pos.y, maxCUSize, maxCUSize));
-        const SubPic & curSubPic = slice->getPPS()->getSubPicFromPos(pos);
-        // padding/restore at slice level
-        if (slice->getPPS()->getNumSubPics() >= 2 && curSubPic.getTreatedAsPicFlag() && ctuIdx == 0)
-        {
-            int subPicX      = (int) curSubPic.getSubPicLeft();
-            int subPicY      = (int) curSubPic.getSubPicTop();
-            int subPicWidth  = (int) curSubPic.getSubPicWidthInLumaSample();
-            int subPicHeight = (int) curSubPic.getSubPicHeightInLumaSample();
-            for (int rlist = REF_PIC_LIST_0; rlist < NUM_REF_PIC_LIST_01; rlist++)
-            {
-                int n = slice->getNumRefIdx((RefPicList) rlist);
-                for (int idx = 0; idx < n; idx++)
-                {
-                    Picture *refPic = slice->getRefPic((RefPicList) rlist, idx);
+      // Synchronize cabac probabilities with top CTU if it's available and at the start of a line.
+      if( ctuIdx != 0 ) // if it is the first CTU, then the entropy coder has already been reset
+      {
+        cabacReader.initCtxModels( *slice );
+        cs.resetPrevPLT(cs.prevPLT);
+      }
+      if( cs.getCURestricted( pos.offset(0, -1), pos, slice->getIndependentSliceIdx(), tileIdx, CH_L ) )
+      {
+        // Top is available, so use it.
+        cabacReader.getCtx() = m_entropyCodingSyncContextState;
+        cs.setPrevPLT(m_palettePredictorSyncState);
+      }
+      pic->m_prevQP[0] = pic->m_prevQP[1] = slice->getSliceQp();
+    }
 
-                    if (!refPic->getSubPicSaved() && refPic->subPictures.size() > 1)
-                    {
-                        refPic->saveSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
-                        refPic->extendSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
-                        refPic->setSubPicSaved(true);
-                    }
-                }
-            }
-        }
+    bool updateBcwCodingOrder = cs.slice->getSliceType() == B_SLICE && ctuIdx == 0;
+    if(updateBcwCodingOrder)
+    {
+      resetBcwCodingOrder(true, cs);
+    }
 
-        DTRACE_UPDATE(g_trace_ctx, std::make_pair("ctu", ctuRsAddr));
+    if ((cs.slice->getSliceType() != I_SLICE || cs.sps->getIBCFlag()) && ctuXPosInCtus == tileXPosInCtus)
+    {
+      cs.motionLut.lut.resize(0);
+      cs.motionLut.lutIbc.resize(0);
+      cs.resetIBCBuffer = true;
+    }
 
-        cabacReader.initBitstream(ppcSubstreams[subStrmId]);
+    if( !cs.slice->isIntra() )
+    {
+      pic->mctsInfo.init( &cs, getCtuAddr( ctuArea.lumaPos(), *( cs.pcv ) ) );
+    }
 
-        // set up CABAC contexts' state for this CTU
-        if (ctuXPosInCtus == tileXPosInCtus && ctuYPosInCtus == tileYPosInCtus)
-        {
-            if (ctuIdx != 0)   // if it is the first CTU, then the entropy coder has already been reset
-            {
-                cabacReader.initCtxModels(*slice);
-                cs.resetPrevPLT(cs.prevPLT);
-            }
-            pic->m_prevQP[0] = pic->m_prevQP[1] = slice->getSliceQp();
-        }
-        else if (ctuXPosInCtus == tileXPosInCtus && wavefrontsEnabled)
-        {
-            // Synchronize cabac probabilities with top CTU if it's available and at the start of a line.
-            if (ctuIdx != 0)   // if it is the first CTU, then the entropy coder has already been reset
-            {
-                cabacReader.initCtxModels(*slice);
-                cs.resetPrevPLT(cs.prevPLT);
-            }
-            if (cs.getCURestricted(pos.offset(0, -1), pos, slice->getIndependentSliceIdx(), tileIdx, CH_L))
-            {
-                // Top is available, so use it.
-                cabacReader.getCtx() = m_entropyCodingSyncContextState;
-                cs.setPrevPLT(m_palettePredictorSyncState);
-            }
-            pic->m_prevQP[0] = pic->m_prevQP[1] = slice->getSliceQp();
-        }
+    if( ctuRsAddr == debugCTU )
+    {
+      break;
+    }
+    cabacReader.coding_tree_unit( cs, ctuArea, pic->m_prevQP, ctuRsAddr );
 
-        bool updateBcwCodingOrder = cs.slice->getSliceType() == B_SLICE && ctuIdx == 0;
-        if (updateBcwCodingOrder)
-        {
-            resetBcwCodingOrder(true, cs);
-        }
+    m_pcCuDecoder->decompressCtu( cs, ctuArea );
 
-        if ((cs.slice->getSliceType() != I_SLICE || cs.sps->getIBCFlag()) && ctuXPosInCtus == tileXPosInCtus)
-        {
-            cs.motionLut.lut.resize(0);
-            cs.motionLut.lutIbc.resize(0);
-            cs.resetIBCBuffer = true;
-        }
+    if( ctuXPosInCtus == tileXPosInCtus && wavefrontsEnabled )
+    {
+      m_entropyCodingSyncContextState = cabacReader.getCtx();
+      cs.storePrevPLT(m_palettePredictorSyncState);
+    }
 
-        if (!cs.slice->isIntra())
-        {
-            pic->mctsInfo.init(&cs, getCtuAddr(ctuArea.lumaPos(), *(cs.pcv)));
-        }
 
-        if (ctuRsAddr == debugCTU)
-        {
-            break;
-        }
-        cabacReader.coding_tree_unit(cs, ctuArea, pic->m_prevQP, ctuRsAddr);
-
-        m_pcCuDecoder->decompressCtu(cs, ctuArea);
-
-        if (ctuXPosInCtus == tileXPosInCtus && wavefrontsEnabled)
-        {
-            m_entropyCodingSyncContextState = cabacReader.getCtx();
-            cs.storePrevPLT(m_palettePredictorSyncState);
-        }
-
-        if (ctuIdx == slice->getNumCtuInSlice() - 1)
-        {
-            unsigned binVal = cabacReader.terminating_bit();
-            CHECK(!binVal, "Expecting a terminating bit");
+    if( ctuIdx == slice->getNumCtuInSlice()-1 )
+    {
+      unsigned binVal = cabacReader.terminating_bit();
+      CHECK( !binVal, "Expecting a terminating bit" );
 #if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-            cabacReader.remaining_bytes(false);
+      cabacReader.remaining_bytes( false );
 #endif
-        }
-        else if ((ctuXPosInCtus + 1 == tileXPosInCtus + tileColWidth)
-                 && (ctuYPosInCtus + 1 == tileYPosInCtus + tileRowHeight || wavefrontsEnabled))
-        {
-            // The sub-stream/stream should be terminated after this CTU.
-            // (end of slice-segment, end of tile, end of wavefront-CTU-row)
-            unsigned binVal = cabacReader.terminating_bit();
-            CHECK(!binVal, "Expecting a terminating bit");
-            if (entryPointPresent)
-            {
-#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
-                cabacReader.remaining_bytes(true);
-#endif
-                subStrmId++;
-            }
-        }
-        if (slice->getPPS()->getNumSubPics() >= 2 && curSubPic.getTreatedAsPicFlag()
-            && ctuIdx == (slice->getNumCtuInSlice() - 1))
-        // for last Ctu in the slice
-        {
-            int subPicX      = (int) curSubPic.getSubPicLeft();
-            int subPicY      = (int) curSubPic.getSubPicTop();
-            int subPicWidth  = (int) curSubPic.getSubPicWidthInLumaSample();
-            int subPicHeight = (int) curSubPic.getSubPicHeightInLumaSample();
-            for (int rlist = REF_PIC_LIST_0; rlist < NUM_REF_PIC_LIST_01; rlist++)
-            {
-                int n = slice->getNumRefIdx((RefPicList) rlist);
-                for (int idx = 0; idx < n; idx++)
-                {
-                    Picture *refPic = slice->getRefPic((RefPicList) rlist, idx);
-                    if (refPic->getSubPicSaved())
-                    {
-                        refPic->restoreSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
-                        refPic->setSubPicSaved(false);
-                    }
-                }
-            }
-        }
     }
-
-    // deallocate all created substreams, including internal buffers.
-    for (auto substr: ppcSubstreams)
+    else if( ( ctuXPosInCtus + 1 == tileXPosInCtus + tileColWidth ) &&
+             ( ctuYPosInCtus + 1 == tileYPosInCtus + tileRowHeight || wavefrontsEnabled ) )
     {
-        delete substr;
+      // The sub-stream/stream should be terminated after this CTU.
+      // (end of slice-segment, end of tile, end of wavefront-CTU-row)
+      unsigned binVal = cabacReader.terminating_bit();
+      CHECK( !binVal, "Expecting a terminating bit" );
+      if( entryPointPresent )
+      {
+#if DECODER_CHECK_SUBSTREAM_AND_SLICE_TRAILING_BYTES
+        cabacReader.remaining_bytes( true );
+#endif
+        subStrmId++;
+      }
     }
-    slice->stopProcessingTimer();
+    if (slice->getPPS()->getNumSubPics() >= 2 && curSubPic.getTreatedAsPicFlag() && ctuIdx == (slice->getNumCtuInSlice() - 1))
+    // for last Ctu in the slice
+    {
+      int subPicX = (int)curSubPic.getSubPicLeft();
+      int subPicY = (int)curSubPic.getSubPicTop();
+      int subPicWidth = (int)curSubPic.getSubPicWidthInLumaSample();
+      int subPicHeight = (int)curSubPic.getSubPicHeightInLumaSample();
+      for (int rlist = REF_PIC_LIST_0; rlist < NUM_REF_PIC_LIST_01; rlist++)
+      {
+        int n = slice->getNumRefIdx((RefPicList)rlist);
+        for (int idx = 0; idx < n; idx++)
+        {
+          Picture *refPic = slice->getRefPic((RefPicList)rlist, idx);
+          if (refPic->getSubPicSaved())
+          {
+            refPic->restoreSubPicBorder(refPic->getPOC(), subPicX, subPicY, subPicWidth, subPicHeight);
+            refPic->setSubPicSaved(false);
+          }
+        }
+      }
+    }
+  }
+
+  // deallocate all created substreams, including internal buffers.
+  for( auto substr: ppcSubstreams )
+  {
+    delete substr;
+  }
+  slice->stopProcessingTimer();
 }
 
 //! \}

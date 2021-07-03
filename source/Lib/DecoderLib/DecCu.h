@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CABACReader.h"
 
@@ -59,47 +59,48 @@
 /// CU decoder class
 class DecCu
 {
-  public:
-    DecCu();
-    virtual ~DecCu();
+public:
+  DecCu();
+  virtual ~DecCu();
 
-    /// initialize access channels
-    void init(TrQuant *pcTrQuant, IntraPrediction *pcIntra, InterPrediction *pcInter);
+  /// initialize access channels
+  void  init              ( TrQuant* pcTrQuant, IntraPrediction* pcIntra, InterPrediction* pcInter );
 
-    /// destroy internal buffers
-    void     decompressCtu(CodingStructure &cs, const UnitArea &ctuArea);
-    Reshape *m_pcReshape;
-    Reshape *getReshape() { return m_pcReshape; }
-    void     initDecCuReshaper(Reshape *pcReshape, ChromaFormat chromaFormatIDC);
-    void     destoryDecCuReshaprBuf();
+  /// destroy internal buffers
+  void  decompressCtu     ( CodingStructure& cs, const UnitArea& ctuArea );
+  Reshape*          m_pcReshape;
+  Reshape* getReshape     () { return m_pcReshape; }
+  void initDecCuReshaper  ( Reshape* pcReshape, ChromaFormat chromaFormatIDC) ;
+  void destoryDecCuReshaprBuf();
 
-    /// reconstruct Ctu information
-  protected:
-    void xIntraRecQT(CodingUnit &cu, const ChannelType chType);
-    void xIntraRecACTQT(CodingUnit &cu);
+  /// reconstruct Ctu information
+protected:
+  void xIntraRecQT        ( CodingUnit&      cu, const ChannelType chType );
+  void xIntraRecACTQT(CodingUnit&      cu);
 
-    void xReconInter(CodingUnit &cu);
-    void xDecodeInterTexture(CodingUnit &cu);
-    void xReconIntraQT(CodingUnit &cu);
+  void xReconInter        ( CodingUnit&      cu );
+  void xDecodeInterTexture( CodingUnit&      cu );
+  void xReconIntraQT      ( CodingUnit&      cu );
 
-    void xIntraRecBlk(TransformUnit &tu, const ComponentID compID);
-    void xIntraRecACTBlk(TransformUnit &tu);
-    void xDecodeInterTU(TransformUnit &tu, const ComponentID compID);
+  void xIntraRecBlk       ( TransformUnit&   tu, const ComponentID compID );
+  void xIntraRecACTBlk(TransformUnit&   tu);
+  void xDecodeInterTU     ( TransformUnit&   tu, const ComponentID compID );
 
-    void        xDeriveCUMV(CodingUnit &cu);
-    void        xReconPLT(CodingUnit &cu, ComponentID compBegin, uint32_t numComp);
-    PelStorage *m_tmpStorageLCU;
+  void xDeriveCUMV        ( CodingUnit&      cu );
+  void xReconPLT          ( CodingUnit&      cu,       ComponentID compBegin, uint32_t numComp );
+  PelStorage        *m_tmpStorageLCU;
+private:
+  TrQuant*          m_pcTrQuant;
+  IntraPrediction*  m_pcIntraPred;
+  InterPrediction*  m_pcInterPred;
 
-  private:
-    TrQuant *        m_pcTrQuant;
-    IntraPrediction *m_pcIntraPred;
-    InterPrediction *m_pcInterPred;
 
-    MotionInfo m_SubPuMiBuf[(MAX_CU_SIZE * MAX_CU_SIZE) >> (MIN_CU_LOG2 << 1)];
+  MotionInfo        m_SubPuMiBuf[(MAX_CU_SIZE * MAX_CU_SIZE) >> (MIN_CU_LOG2 << 1)];
 
-    MergeCtx m_geoMrgCtx;
+  MergeCtx          m_geoMrgCtx;
 };
 
 //! \}
 
 #endif
+

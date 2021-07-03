@@ -40,7 +40,7 @@
 
 #if _MSC_VER > 1000
 #pragma once
-#endif   // _MSC_VER > 1000
+#endif // _MSC_VER > 1000
 
 #include "CommonLib/CommonDef.h"
 #include <vector>
@@ -55,18 +55,20 @@
 /// Decoder configuration class
 class StreamMergeAppCfg
 {
-  protected:
-    std::string m_bitstreamFileNameIn[MAX_VPS_LAYERS];   ///< output bitstream file name
-    std::string m_bitstreamFileNameOut;                  ///< input bitstream file name
-    int         m_numInputStreams;                       ///< number of input bitstreams
+protected:
+  std::string   m_bitstreamFileNameIn[MAX_VPS_LAYERS];                ///< output bitstream file name
+  std::string   m_bitstreamFileNameOut;               ///< input bitstream file name
+  int           m_numInputStreams;                    ///< number of input bitstreams
 
-  public:
-    StreamMergeAppCfg();
-    virtual ~StreamMergeAppCfg();
+public:
+  StreamMergeAppCfg();
+  virtual ~StreamMergeAppCfg();
 
-    bool parseCfg(int argc, char *argv[]);   ///< initialize option class from configuration
+  bool  parseCfg        ( int argc, char* argv[] );   ///< initialize option class from configuration
 };
 
 //! \}
 
-#endif   // __STREAMMERGEAPPCFG__
+#endif  // __STREAMMERGEAPPCFG__
+
+

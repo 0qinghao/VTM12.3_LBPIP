@@ -45,48 +45,45 @@ class OutputBitstream;
 //! \{
 class SEIWriter : public VLCWriter
 {
-  public:
-    SEIWriter(){};
-    virtual ~SEIWriter(){};
+public:
+  SEIWriter() {};
+  virtual ~SEIWriter() {};
 
-    void writeSEImessages(OutputBitstream &bs, const SEIMessages &seiList, HRD &hrd, bool isNested,
-                          const uint32_t temporalId);
+  void writeSEImessages(OutputBitstream& bs, const SEIMessages &seiList, HRD &hrd, bool isNested, const uint32_t temporalId);
 
-  protected:
-    void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
-    void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo &sei, const SEIBufferingPeriod &bp,
-                                   const uint32_t temporalId);
-    void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash &sei);
-    void xWriteSEIBufferingPeriod(const SEIBufferingPeriod &sei);
-    void xWriteSEIPictureTiming(const SEIPictureTiming &sei, const SEIBufferingPeriod &bp, const uint32_t temporalId);
-    void xWriteSEIFrameFieldInfo(const SEIFrameFieldInfo &sei);
-    void xWriteSEIDependentRAPIndication(const SEIDependentRAPIndication &sei);
-    void xWriteSEIScalableNesting(OutputBitstream &bs, const SEIScalableNesting &sei);
-    void xWriteSEIFramePacking(const SEIFramePacking &sei);
-    void xWriteSEIParameterSetsInclusionIndication(const SEIParameterSetsInclusionIndication &sei);
-    void xWriteSEIMasteringDisplayColourVolume(const SEIMasteringDisplayColourVolume &sei);
+protected:
+  void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
+  void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, const SEIBufferingPeriod& bp, const uint32_t temporalId);
+  void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei);
+  void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei);
+  void xWriteSEIPictureTiming(const SEIPictureTiming& sei, const SEIBufferingPeriod& bp, const uint32_t temporalId);
+  void xWriteSEIFrameFieldInfo(const SEIFrameFieldInfo& sei);
+  void xWriteSEIDependentRAPIndication(const SEIDependentRAPIndication& sei);
+  void xWriteSEIScalableNesting(OutputBitstream& bs, const SEIScalableNesting& sei);
+  void xWriteSEIFramePacking(const SEIFramePacking& sei);
+  void xWriteSEIParameterSetsInclusionIndication(const SEIParameterSetsInclusionIndication& sei);
+  void xWriteSEIMasteringDisplayColourVolume( const SEIMasteringDisplayColourVolume& sei);
 #if U0033_ALTERNATIVE_TRANSFER_CHARACTERISTICS_SEI
-    void xWriteSEIAlternativeTransferCharacteristics(const SEIAlternativeTransferCharacteristics &sei);
+  void xWriteSEIAlternativeTransferCharacteristics(const SEIAlternativeTransferCharacteristics& sei);
 #endif
-    void xWriteSEIEquirectangularProjection(const SEIEquirectangularProjection &sei);
-    void xWriteSEISphereRotation(const SEISphereRotation &sei);
-    void xWriteSEIOmniViewport(const SEIOmniViewport &sei);
-    void xWriteSEIRegionWisePacking(const SEIRegionWisePacking &sei);
-    void xWriteSEIGeneralizedCubemapProjection(const SEIGeneralizedCubemapProjection &sei);
-    void xWriteSEISubpictureLevelInfo(const SEISubpicureLevelInfo &sei);
-    void xWriteSEISampleAspectRatioInfo(const SEISampleAspectRatioInfo &sei);
+  void xWriteSEIEquirectangularProjection         (const SEIEquirectangularProjection &sei);
+  void xWriteSEISphereRotation                    (const SEISphereRotation &sei);
+  void xWriteSEIOmniViewport                      (const SEIOmniViewport& sei);
+  void xWriteSEIRegionWisePacking                 (const SEIRegionWisePacking &sei);
+  void xWriteSEIGeneralizedCubemapProjection      (const SEIGeneralizedCubemapProjection &sei);
+  void xWriteSEISubpictureLevelInfo               (const SEISubpicureLevelInfo &sei);
+  void xWriteSEISampleAspectRatioInfo             (const SEISampleAspectRatioInfo &sei);
 
-    void xWriteSEIUserDataRegistered(const SEIUserDataRegistered &sei);
-    void xWriteSEIFilmGrainCharacteristics(const SEIFilmGrainCharacteristics &sei);
-    void xWriteSEIContentLightLevelInfo(const SEIContentLightLevelInfo &sei);
-    void xWriteSEIAmbientViewingEnvironment(const SEIAmbientViewingEnvironment &sei);
-    void xWriteSEIContentColourVolume(const SEIContentColourVolume &sei);
-    void xWriteSEIAnnotatedRegions(const SEIAnnotatedRegions &sei);
-    void xWriteSEIpayloadData(OutputBitstream &bs, const SEI &sei, HRD &hrd, const uint32_t temporalId);
-    void xWriteByteAlign();
-
-  protected:
-    HRD m_nestingHrd;
+  void xWriteSEIUserDataRegistered(const SEIUserDataRegistered& sei);
+  void xWriteSEIFilmGrainCharacteristics(const SEIFilmGrainCharacteristics& sei);
+  void xWriteSEIContentLightLevelInfo(const SEIContentLightLevelInfo& sei);
+  void xWriteSEIAmbientViewingEnvironment(const SEIAmbientViewingEnvironment& sei);
+  void xWriteSEIContentColourVolume(const SEIContentColourVolume &sei);
+  void xWriteSEIAnnotatedRegions                  (const SEIAnnotatedRegions& sei);
+  void xWriteSEIpayloadData(OutputBitstream &bs, const SEI& sei, HRD &hrd, const uint32_t temporalId);
+  void xWriteByteAlign();
+protected:
+  HRD m_nestingHrd;
 };
 
 //! \}

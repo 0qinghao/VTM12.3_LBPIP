@@ -38,6 +38,7 @@
 #ifndef __RDCOSTWEIGHTPREDICTION__
 #define __RDCOSTWEIGHTPREDICTION__
 
+
 #include "CommonDef.h"
 
 class DistParam;
@@ -50,9 +51,10 @@ class Pattern;
 /// RD cost computation namespace, with Weighted Prediction
 namespace RdCostWeightPrediction
 {
-    Distortion xGetSSEw(const DistParam &rcDtParam);
-    Distortion xGetSADw(const DistParam &rcDtParam);
-    Distortion xGetHADsw(const DistParam &rcDtParam);
-}   // namespace RdCostWeightPrediction
+  Distortion xGetSSEw ( const DistParam& rcDtParam );
+  Distortion xGetSADw ( const DistParam& rcDtParam );
+  Distortion xGetHADsw( const DistParam& rcDtParam );
+}// END NAMESPACE DEFINITION RdCostWeightPrediction
 
-#endif   // __RDCOSTWEIGHTPREDICTION__
+#endif // __RDCOSTWEIGHTPREDICTION__
+

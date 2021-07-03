@@ -54,70 +54,74 @@ namespace po = df::program_options_lite;
 /** \param argc number of arguments
     \param argv array of arguments
  */
-bool SEIRemovalAppCfg::parseCfg(int argc, char *argv[])
+bool SEIRemovalAppCfg::parseCfg( int argc, char* argv[] )
 {
-    bool        do_help             = false;
-    int         warnUnknowParameter = 0;
-    po::Options opts;
-    opts.addOptions()
+  bool do_help = false;
+  int warnUnknowParameter = 0;
+  po::Options opts;
+  opts.addOptions()
 
-      ("help", do_help, false, "this help text")("BitstreamFileIn,b", m_bitstreamFileNameIn, string(""),
-                                                 "bitstream input file name")(
-        "BitstreamFileOut,o", m_bitstreamFileNameOut, string(""), "bitstream output file name")(
-        "DiscardPrefixSEI,p", m_discardPrefixSEIs, false, "remove all prefix SEIs (default: 0)")(
-        "DiscardSuffixSEI,s", m_discardSuffixSEIs, true, "remove all suffix SEIs (default: 1)")(
-        "NumSkip", m_numNALUnitsToSkip, 0,
-        "number of NAL units to skip (counted inclusive the units skipped with -p/-s options)")(
-        "NumWrite", m_numNALUnitsToWrite, -1,
-        "number of NAL units to write (counted inclusive the units skipped with -p/-s/--NumSkip options), -1 to "
-        "disable")
+  ("help",                      do_help,                               false,      "this help text")
+  ("BitstreamFileIn,b",         m_bitstreamFileNameIn,                 string(""), "bitstream input file name")
+  ("BitstreamFileOut,o",        m_bitstreamFileNameOut,                string(""), "bitstream output file name")
+  ("DiscardPrefixSEI,p",        m_discardPrefixSEIs,                   false,      "remove all prefix SEIs (default: 0)")
+  ("DiscardSuffixSEI,s",        m_discardSuffixSEIs,                   true,       "remove all suffix SEIs (default: 1)")
+  ("NumSkip",                   m_numNALUnitsToSkip,                   0,          "number of NAL units to skip (counted inclusive the units skipped with -p/-s options)" )
+  ("NumWrite",                  m_numNALUnitsToWrite,                  -1,         "number of NAL units to write (counted inclusive the units skipped with -p/-s/--NumSkip options), -1 to disable" )
 
-        ("WarnUnknowParameter,w", warnUnknowParameter, 0,
-         "warn for unknown configuration parameters instead of failing");
+  ("WarnUnknowParameter,w",     warnUnknowParameter,                   0,          "warn for unknown configuration parameters instead of failing")
+  ;
 
-    po::setDefaults(opts);
-    po::ErrorReporter         err;
-    const list<const char *> &argv_unhandled = po::scanArgv(opts, argc, (const char **) argv, err);
+  po::setDefaults(opts);
+  po::ErrorReporter err;
+  const list<const char*>& argv_unhandled = po::scanArgv(opts, argc, (const char**) argv, err);
 
-    for (list<const char *>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  for (list<const char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  {
+    std::cerr << "Unhandled argument ignored: "<< *it << std::endl;
+  }
+
+  if (argc == 1 || do_help)
+  {
+    po::doHelp(cout, opts);
+    return false;
+  }
+
+  if (err.is_errored)
+  {
+    if (!warnUnknowParameter)
     {
-        std::cerr << "Unhandled argument ignored: " << *it << std::endl;
+      /* errors have already been reported to stderr */
+      return false;
     }
+  }
 
-    if (argc == 1 || do_help)
-    {
-        po::doHelp(cout, opts);
-        return false;
-    }
 
-    if (err.is_errored)
-    {
-        if (!warnUnknowParameter)
-        {
-            /* errors have already been reported to stderr */
-            return false;
-        }
-    }
+  if (m_bitstreamFileNameIn.empty())
+  {
+    std::cerr << "No input file specified, aborting" << std::endl;
+    return false;
+  }
+  if (m_bitstreamFileNameOut.empty())
+  {
+    std::cerr << "No output file specified, aborting" << std::endl;
+    return false;
+  }
 
-    if (m_bitstreamFileNameIn.empty())
-    {
-        std::cerr << "No input file specified, aborting" << std::endl;
-        return false;
-    }
-    if (m_bitstreamFileNameOut.empty())
-    {
-        std::cerr << "No output file specified, aborting" << std::endl;
-        return false;
-    }
 
-    return true;
+  return true;
 }
 
 SEIRemovalAppCfg::SEIRemovalAppCfg()
-  : m_bitstreamFileNameIn(), m_bitstreamFileNameOut(), m_discardPrefixSEIs(false), m_discardSuffixSEIs(false)
+: m_bitstreamFileNameIn()
+, m_bitstreamFileNameOut()
+, m_discardPrefixSEIs( false )
+, m_discardSuffixSEIs( false )
 {
 }
 
-SEIRemovalAppCfg::~SEIRemovalAppCfg() {}
+SEIRemovalAppCfg::~SEIRemovalAppCfg()
+{
+}
 
 //! \}

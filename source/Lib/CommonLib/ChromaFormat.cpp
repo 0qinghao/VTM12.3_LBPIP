@@ -31,56 +31,59 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include "ChromaFormat.h"
 #include "TrQuant.h"
+
 
 //----------------------------------------------------------------------------------------------------------------------
 
 InputColourSpaceConversion stringToInputColourSpaceConvert(const std::string &value, const bool bIsForward)
 {
-    if (value.empty() || value == "UNCHANGED")
+  if (value.empty() || value=="UNCHANGED")
+  {
+    return IPCOLOURSPACE_UNCHANGED;
+  }
+  if (bIsForward)
+  {
+    if (value=="YCbCrtoYYY")
     {
-        return IPCOLOURSPACE_UNCHANGED;
+      return IPCOLOURSPACE_YCbCrtoYYY;
     }
-    if (bIsForward)
+    if (value=="YCbCrtoYCrCb")
     {
-        if (value == "YCbCrtoYYY")
-        {
-            return IPCOLOURSPACE_YCbCrtoYYY;
-        }
-        if (value == "YCbCrtoYCrCb")
-        {
-            return IPCOLOURSPACE_YCbCrtoYCrCb;
-        }
-        if (value == "RGBtoGBR")
-        {
-            return IPCOLOURSPACE_RGBtoGBR;
-        }
+      return IPCOLOURSPACE_YCbCrtoYCrCb;
     }
-    else
+    if (value=="RGBtoGBR")
     {
-        if (value == "YCrCbtoYCbCr")
-        {
-            return IPCOLOURSPACE_YCbCrtoYCrCb;
-        }
-        if (value == "GBRtoRGB")
-        {
-            return IPCOLOURSPACE_RGBtoGBR;
-        }
+      return IPCOLOURSPACE_RGBtoGBR;
     }
-    return NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS;
+  }
+  else
+  {
+    if (value=="YCrCbtoYCbCr")
+    {
+      return IPCOLOURSPACE_YCbCrtoYCrCb;
+    }
+    if (value=="GBRtoRGB")
+    {
+      return IPCOLOURSPACE_RGBtoGBR;
+    }
+  }
+  return NUMBER_INPUT_COLOUR_SPACE_CONVERSIONS;
 }
 
 std::string getListOfColourSpaceConverts(const bool bIsForward)
 {
-    if (bIsForward)
-    {
-        return "UNCHANGED, YCbCrtoYCrCb, YCbCrtoYYY or RGBtoGBR";
-    }
-    else
-    {
-        return "UNCHANGED, YCrCbtoYCbCr or GBRtoRGB";
-    }
+  if (bIsForward)
+  {
+    return "UNCHANGED, YCbCrtoYCrCb, YCbCrtoYYY or RGBtoGBR";
+  }
+  else
+  {
+    return "UNCHANGED, YCrCbtoYCbCr or GBRtoRGB";
+  }
 }
+
 
 //----------------------------------------------------------------------------------------------------------------------

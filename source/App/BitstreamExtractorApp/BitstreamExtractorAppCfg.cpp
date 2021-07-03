@@ -31,6 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -44,105 +45,111 @@
 using namespace std;
 namespace po = df::program_options_lite;
 
+
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
 
 // argc number of arguments
 // argv array of arguments
-bool BitstreamExtractorAppCfg::parseCfg(int argc, char *argv[])
+ bool BitstreamExtractorAppCfg::parseCfg( int argc, char* argv[] )
 {
 #if ENABLE_TRACING
-    bool        printTracingChannelsList;
-    std::string tracingFile;
-    std::string tracingRule;
+  bool printTracingChannelsList;
+  std::string tracingFile;
+  std::string tracingRule;
 #endif
 
-    bool printHelp            = false;
-    bool warnUnknownParameter = false;
-    int  verbosity;
+  bool printHelp = false;
+  bool warnUnknownParameter = false;
+  int  verbosity;
 
-    po::Options opts;
-    opts.addOptions()
+  po::Options opts;
+  opts.addOptions()
 
-      ("help", printHelp, false, "This help text")("BitstreamFileIn,b", m_bitstreamFileNameIn, string(""),
-                                                   "Bitstream input file name")(
-        "BitstreamFileOut,o", m_bitstreamFileNameOut, string(""), "bitstream output file name")(
-        "MaxTemporalLayer,t", m_maxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")(
-        "TargetOutputLayerSet,p", m_targetOlsIdx, -1,
-        "Target output layer set index")("SubPicIdx,s", m_subPicIdx, -1,
-                                         "Target subpic index for target output layers that containing multiple "
-                                         "subpictures. -1 to decode all subpictures")
+  ("help",                      printHelp,                             false,      "This help text")
+  ("BitstreamFileIn,b",         m_bitstreamFileNameIn,                 string(""), "Bitstream input file name")
+  ("BitstreamFileOut,o",        m_bitstreamFileNameOut,                string(""), "bitstream output file name")
+  ("MaxTemporalLayer,t",        m_maxTemporalLayer,                    -1,         "Maximum Temporal Layer to be decoded. -1 to decode all layers")
+  ("TargetOutputLayerSet,p",    m_targetOlsIdx,                        -1,         "Target output layer set index")
+  ("SubPicIdx,s",               m_subPicIdx,                           -1,         "Target subpic index for target output layers that containing multiple subpictures. -1 to decode all subpictures")
 
 #if ENABLE_TRACING
-        ("TraceChannelsList", printTracingChannelsList, false, "List all available tracing channels")(
-          "TraceRule", tracingRule, string(""), "Tracing rule (ex: \"D_CABAC:poc==8\" or \"D_REC_CB_LUMA:poc==8\")")(
-          "TraceFile", tracingFile, string(""), "Tracing file")
+  ("TraceChannelsList",         printTracingChannelsList,              false,        "List all available tracing channels" )
+  ("TraceRule",                 tracingRule,                           string( "" ), "Tracing rule (ex: \"D_CABAC:poc==8\" or \"D_REC_CB_LUMA:poc==8\")" )
+  ("TraceFile",                 tracingFile,                           string( "" ), "Tracing file" )
 #endif
 
-          ("Verbosity,v", verbosity, (int) VERBOSE,
-           "Specifies the level of the verboseness")("WarnUnknowParameter,w", warnUnknownParameter, false,
-                                                     "Warn for unknown configuration parameters instead of failing");
+  ("Verbosity,v",               verbosity,                             (int)VERBOSE, "Specifies the level of the verboseness")
+  ("WarnUnknowParameter,w",     warnUnknownParameter,                  false,        "Warn for unknown configuration parameters instead of failing")
+  ;
 
-    po::setDefaults(opts);
-    po::ErrorReporter         err;
-    const list<const char *> &argv_unhandled = po::scanArgv(opts, argc, (const char **) argv, err);
+  po::setDefaults(opts);
+  po::ErrorReporter err;
+  const list<const char*>& argv_unhandled = po::scanArgv(opts, argc, (const char**) argv, err);
 
-    for (list<const char *>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
-    {
-        std::cerr << "Unhandled argument ignored: " << *it << std::endl;
-    }
+  for (list<const char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  {
+    std::cerr << "Unhandled argument ignored: "<< *it << std::endl;
+  }
 
-    if (argc == 1 || printHelp)
-    {
-        po::doHelp(cout, opts);
-        return false;
-    }
+  if (argc == 1 || printHelp)
+  {
+    po::doHelp(cout, opts);
+    return false;
+  }
 
 #if ENABLE_TRACING
-    g_trace_ctx = tracing_init(tracingFile, tracingRule);
-    if (printTracingChannelsList && g_trace_ctx)
-    {
-        std::string channelsList;
-        g_trace_ctx->getChannelsList(channelsList);
-        msg(INFO, "\nAvailable tracing channels:\n\n%s\n", channelsList.c_str());
-    }
-    DTRACE_UPDATE(g_trace_ctx, std::make_pair("final", 1));
+  g_trace_ctx = tracing_init( tracingFile, tracingRule );
+  if( printTracingChannelsList && g_trace_ctx )
+  {
+    std::string channelsList;
+    g_trace_ctx->getChannelsList( channelsList );
+    msg( INFO, "\nAvailable tracing channels:\n\n%s\n", channelsList.c_str() );
+  }
+  DTRACE_UPDATE( g_trace_ctx, std::make_pair( "final", 1 ) );
 #endif
 
-    g_verbosity = MsgLevel(verbosity);
+  g_verbosity = MsgLevel( verbosity );
 
-    if (err.is_errored)
+  if (err.is_errored)
+  {
+    if (!warnUnknownParameter)
     {
-        if (!warnUnknownParameter)
-        {
-            /* errors have already been reported to stderr */
-            return false;
-        }
+      /* errors have already been reported to stderr */
+      return false;
     }
+  }
 
-    if (m_bitstreamFileNameIn.empty())
-    {
-        std::cerr << "No input file specified, aborting" << std::endl;
-        return false;
-    }
-    if (m_bitstreamFileNameOut.empty())
-    {
-        std::cerr << "No output file specified, aborting" << std::endl;
-        return false;
-    }
 
-    return true;
+  if (m_bitstreamFileNameIn.empty())
+  {
+    std::cerr << "No input file specified, aborting" << std::endl;
+    return false;
+  }
+  if (m_bitstreamFileNameOut.empty())
+  {
+    std::cerr << "No output file specified, aborting" << std::endl;
+    return false;
+  }
+
+
+  return true;
 }
 
 BitstreamExtractorAppCfg::BitstreamExtractorAppCfg()
-  : m_bitstreamFileNameIn(), m_bitstreamFileNameOut(), m_maxTemporalLayer(0), m_targetOlsIdx(0), m_subPicIdx(-1)
+: m_bitstreamFileNameIn()
+, m_bitstreamFileNameOut()
+, m_maxTemporalLayer( 0 )
+, m_targetOlsIdx( 0 )
+, m_subPicIdx( -1 )
 {
 }
 
 BitstreamExtractorAppCfg::~BitstreamExtractorAppCfg()
 {
 #if ENABLE_TRACING
-    tracing_uninit(g_trace_ctx);
+  tracing_uninit( g_trace_ctx );
 #endif
 }
+
